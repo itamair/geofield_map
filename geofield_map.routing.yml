@@ -5,3 +5,25 @@ geofield_map.settings:
     _title: 'Geofield Map settings'
   requirements:
     _permission: 'configure geofield_map'
+
+geofield_map.geocode:
+  path: '/geofield_map/geocode'
+  defaults:
+    _controller: '\Drupal\geofield_map\Controller\GeofieldMapGeocoder::geocode'
+    _title: 'Geocode'
+  methods:  [POST]
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
+
+geofield_map.reverse_geocode:
+  path: '/geofield_map/reverse_geocode'
+  defaults:
+    _controller: '\Drupal\geofield_map\Controller\GeofieldMapGeocoder::reverseGeocode'
+    _title: 'Reverse Geocode'
+  methods:  [POST]
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'
