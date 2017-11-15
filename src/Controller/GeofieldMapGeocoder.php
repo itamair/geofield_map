@@ -83,7 +83,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
       // Get data from the POST Request.
       $request_content = json_decode($request->getContent(), TRUE);
 
-      $address = $request_content['address'] ? $request_content['address'] : 'Taranto, Italy';
+      $address = $request_content['address'] ? $request_content['address'] : '';
       $plugins = !empty($request_content['plugins']) ? explode('+', $request_content['plugins']) : ['openstreetmap'];
       $options = !empty($request_content['plugins_options']) ? $request_content['plugins_options'] : [];
 
