@@ -10,7 +10,7 @@ use Geocoder\Model\Address;
  *
  * @GeocoderDumper(
  *   id = "geofieldmap_addresstext",
- *   name = "GeofieldMap Address string"
+ *   name = "GeofieldMap Address Text string"
  * )
  */
 class GeofieldMapAddressText extends DumperBase {

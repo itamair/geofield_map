@@ -1,0 +1,5 @@
+services:
+  geofield_map.geocoder:
+    class: Drupal\geofield_map\GeofieldMapGeocoderService
+    arguments: ['@geocoder', '@plugin.manager.geocoder.dumper']
+
