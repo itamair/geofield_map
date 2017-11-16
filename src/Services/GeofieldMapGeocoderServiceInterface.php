@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\geofield_map;
+namespace Drupal\geofield_map\Services;
 
 /**
  * Interface GeofieldMapGeocoderServiceInterface.

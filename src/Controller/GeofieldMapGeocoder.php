@@ -6,7 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\geofield_map\GeofieldMapGeocoderServiceInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Cache\CacheableJsonResponse;
@@ -29,7 +29,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
   /**
    * Drupal\geofield_map\GeofieldMapGeocoder definition.
    *
-   * @var \Drupal\geofield_map\GeofieldMapGeocoderService
+   * @var \Drupal\geofield_map\Services\GeocoderGoogleMapsService
    */
   protected $geocoder;
 
@@ -47,7 +47,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
    *   The config factory.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The modules handler.
-   * @param \Drupal\geofield_map\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
    *   The Geofield Map Geocoder service.
    */
   public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, GeofieldMapGeocoderServiceInterface $geofield_map_geocoder) {
@@ -136,10 +136,10 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
         // ... otherwise try with the Google Map Service.
         case 'googlemaps_service':
           // Get the result of Address geocoderGeocode.
-          $data['results'] = ['Google Maps geocoding Results will be here'];
+          $data['results'] = $this->geocoder->googleMapsGeocode($address, $gmap_apikey);
           if (!empty($data['results'])) {
             $data['geocode']['status'] = TRUE;
-            $data['geocode']['message'] = 'The Geocoder(s) succeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
+            $data['geocode']['message'] = 'The direct Google Map Service succeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
           }
           else {
             $data['geocode']['message'] = 'The Google Map Service failed to geocode ' . $address;

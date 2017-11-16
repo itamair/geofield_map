@@ -1,5 +1,4 @@
 services:
   geofield_map.geocoder:
-    class: Drupal\geofield_map\GeofieldMapGeocoderService
-    arguments: ['@geocoder', '@plugin.manager.geocoder.dumper']
-
+    class: Drupal\geofield_map\Services\GeocoderGoogleMapsService
+    arguments: ['@http_client']

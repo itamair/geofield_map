@@ -1,14 +1,22 @@
 <?php
 
-namespace Drupal\geofield_map;
+namespace Drupal\geofield_map\Services;
 
+use GuzzleHttp\ClientInterface;
 use Drupal\geocoder\GeocoderInterface;
 use Drupal\geocoder\DumperPluginManager;
 
 /**
- * Class GeofieldMapGeocoderService.
+ * Class GeocoderGeocoderService.
  */
-class GeofieldMapGeocoderService implements GeofieldMapGeocoderServiceInterface {
+class GeocoderGeocoderService extends GeocoderGoogleMaps implements GeofieldMapGeocoderServiceInterface {
+
+  /**
+   * GuzzleHttp\Client definition.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
+  protected $httpClient;
 
   /**
    * Drupal\geocoder\Geocoder definition.
@@ -27,12 +35,15 @@ class GeofieldMapGeocoderService implements GeofieldMapGeocoderServiceInterface 
   /**
    * Constructs a new GeofieldMapGeocoderService object.
    *
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The Http Client.
    * @param \Drupal\geocoder\GeocoderInterface $geocoder
    *   The geocoder service.
    * @param \Drupal\geocoder\DumperPluginManager $geocoder_dumper
    *   The geocoder dumper service.
    */
-  public function __construct(GeocoderInterface $geocoder, DumperPluginManager $geocoder_dumper) {
+  public function __construct(ClientInterface $http_client, GeocoderInterface $geocoder, DumperPluginManager $geocoder_dumper) {
+    parent::__construct($http_client);
     $this->geocoder = $geocoder;
     $this->geocoderDumper = $geocoder_dumper;
   }
@@ -49,21 +60,14 @@ class GeofieldMapGeocoderService implements GeofieldMapGeocoderServiceInterface 
       /* @var \Geocoder\Model\Address $geoAddress */
       foreach ($addressesCollection as $geoAddress) {
         $geoAddressArray = $geoAddress->toArray();
-        $geoAddressArray['addresstext'] = $this->geocoderDumper->createInstance('geofieldmap_addresstext')
-          ->dump($geoAddress);
         $geoAddressArray['formatted_address'] = $this->geocoderDumper->createInstance('geofieldmap_formattedaddress')
+          ->dump($geoAddress);
+        $geoAddressArray['geometry'] = $this->geocoderDumper->createInstance('geofieldmap_geometry')
           ->dump($geoAddress);
         $results[] = $geoAddressArray;
       }
     }
     return $results;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function googleMapsGeocode($address, $apiKey) {
-    return [];
   }
 
 }
