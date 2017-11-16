@@ -169,6 +169,27 @@
       }
     },
 
+    // The Geocoder call via Ajax.
+    ajax_geocode: function(address) {
+      return $.ajax({
+        url: Drupal.url('geofield_map/geocode?' +
+          'plugins=' + encodeURIComponent('bingmaps+googlemaps+openstreetmap+geonames') +
+          '&address=' +  encodeURIComponent(address)),
+        type:"POST",
+        contentType:"application/json; charset=utf-8",
+        dataType:"json",
+        data: {
+          "plugins_options": {
+            "geonames": {
+              "username": "demo"
+            },
+            "openstreetmap": {},
+            "bingmaps": {}
+          }
+        }
+      });
+    },
+
     // Reverse geocode.
     reverse_geocode: function (mapid, position) {
       var self = this;
@@ -421,16 +442,26 @@
           self.map_data[params.mapid].search.autocomplete({
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
-              self.geocoder.geocode({address: request.term}, function (results, status) {
+              // Execute the geocoder.
+              $.when(self.ajax_geocode(request.term).then(
+                // On Resolve/Success.
+                function (data, textStatus, jqXHR) {
+                var results = data['results'];
                 response($.map(results, function (item) {
                   return {
                     label: item.formatted_address,
                     value: item.formatted_address,
-                    latitude: item.geometry.location.lat(),
-                    longitude: item.geometry.location.lng()
+                    latitude: item.geometry.location.lat,
+                    longitude: item.geometry.location.lng
                   };
                 }));
-              });
+              },
+                // On Reject/Error.
+                function() {
+                  response(function(){
+                    return false;
+                  });
+                }));
             },
             // This bit is executed upon selection of an address.
             select: function (event, ui) {
@@ -445,14 +476,12 @@
             if (e.which === 13) {
               e.preventDefault();
               var input = self.map_data[params.mapid].search.val();
-              // Execute the geocoder
-              self.geocoder.geocode({address: input}, function (results, status) {
-                if (status === google.maps.GeocoderStatus.OK && results[0]) {
-                  // Triggers the Geocode on the Geofield Map Widget
-                  var position = self.getLatLng(params.mapid, results[0].geometry.location.lat(), results[0].geometry.location.lng());
-                  self.trigger_geocode(params.mapid, position);
-                }
-              });
+              $.when(self.ajax_geocode(input).then(function (data, textStatus, jqXHR) {
+                var result = data['results'][0];
+                // Triggers the Geocode on the Geofield Map Widget
+                var position = self.getLatLng(params.mapid, result.geometry.location.lat, result.geometry.location.lng);
+                self.trigger_geocode(params.mapid, position);
+              }));
             }
           });
         }
@@ -485,18 +514,8 @@
 
         }
 
-        // Events on Lat field change.
-        $('#' + self.map_data[params.mapid].latid).on('change', function (e) {
-          self.geofield_onchange(params.mapid);
-        }).keydown(function (e) {
-          if (e.which === 13) {
-            e.preventDefault();
-            self.geofield_onchange(params.mapid);
-          }
-        });
-
-        // Events on Lon field change.
-        $('#' + self.map_data[params.mapid].lngid).on('change', function (e) {
+        // Events on Lat or Lng field change.
+        $('#' + self.map_data[params.mapid].latid, '#' + self.map_data[params.mapid].lngid).on('change', function (e) {
           self.geofield_onchange(params.mapid);
         }).keydown(function (e) {
           if (e.which === 13) {

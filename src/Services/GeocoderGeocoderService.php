@@ -60,10 +60,18 @@ class GeocoderGeocoderService extends GeocoderGoogleMaps implements GeofieldMapG
       /* @var \Geocoder\Model\Address $geoAddress */
       foreach ($addressesCollection as $geoAddress) {
         $geoAddressArray = $geoAddress->toArray();
-        $geoAddressArray['formatted_address'] = $this->geocoderDumper->createInstance('geofieldmap_formattedaddress')
-          ->dump($geoAddress);
-        $geoAddressArray['geometry'] = $this->geocoderDumper->createInstance('geofieldmap_geometry')
-          ->dump($geoAddress);
+        // It a formatted_address property is not defined
+        // (as Google Maps Geocoding does), then create it with our own dumper.
+        if (!isset($geoAddressArray['formatted_address'])) {
+          $geoAddressArray['formatted_address'] = $this->geocoderDumper->createInstance('geofieldmap_formattedaddress')
+            ->dump($geoAddress);
+        }
+        // It a formatted_address property is not defined
+        // (as Google Maps Geocoding does), then create it with our own dumper.
+        if (!isset($geoAddressArray['geometry'])) {
+          $geoAddressArray['geometry'] = $this->geocoderDumper->createInstance('geofieldmap_geometry')
+            ->dump($geoAddress);
+        }
         $results[] = $geoAddressArray;
       }
     }

@@ -25,14 +25,15 @@ class GeofieldMapFormattedAddress extends DumperBase {
         $values[$key] = $value;
       }
     }
-    unset($values['latitude'], $values['longitude']);
 
-    $formatted_address = $values['streetName'] .
-      ', ' . $values['streetNumber'] .
-      ', ' . $values['postalCode'] .
-      ' ' . $values['locality'] .
-      ' ' . $values['countryCode'] .
-      ', ' . $values['country'];
+    $formatted_address = '';
+    $formatted_address .= !empty($values['streetName']) ? $values['streetName'] . ', ' : '';
+    $formatted_address .= !empty($values['streetNumber']) ? $values['streetNumber'] . ', ' : '';
+    $formatted_address .= !empty($values['postalCode']) ? $values['postalCode'] . ' ' : '';
+    $formatted_address .= !empty($values['subLocality']) && !empty($values['locality']) ? $values['subLocality'] . ' - ' . $values['locality'] . ' ' : '';
+    $formatted_address .= empty($values['subLocality']) && !empty($values['locality']) ? $values['locality'] . ' ' : '';
+    $formatted_address .= !empty($values['countryCode']) ? $values['countryCode'] . ', ' : '';
+    $formatted_address .= !empty($values['country']) ? $values['country'] : '';
 
     return $formatted_address;
   }
