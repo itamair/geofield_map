@@ -1,1 +1,4 @@
 gmap_api_key: ''
+geocoder:
+  min_terms: 5
+  delay: 500

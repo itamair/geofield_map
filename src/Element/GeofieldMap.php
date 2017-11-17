@@ -60,6 +60,10 @@ class GeofieldMap extends GeofieldElementBase {
    */
   public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
+    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
+    $config = \Drupal::service('config.factory');
+    $geofield_map_settings = $config->get('geofield_map.settings');
+
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }
@@ -75,7 +79,9 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
-        '#description' => t("Use this to geocode your search location"),
+        '#description' => t("Use this to geocode your search location.<br>You need to input at least <u>@terms terms</u> to start the Geocode process.</br>", [
+          '@terms' => !empty($geofield_map_settings->get('geocoder.min_terms')) ? $geofield_map_settings->get('geocoder.min_terms') : 5,
+        ]),
         '#size' => 60,
         '#maxlength' => 128,
         '#attributes' => [

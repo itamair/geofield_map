@@ -5,3 +5,13 @@ geofield_map.settings:
     gmaps_api_key:
       type: string
       label: 'Google Maps API Key'
+    geocoder:
+      type: config_object
+      label: 'Geocoder settings'
+      mapping:
+        min_terms:
+          type: integer
+          label: 'The minimum terms for the Geocoder to start processing'
+        delay:
+          type: integer
+          label: 'The delay in milliseconds between when a keystroke occurs and when a Geocode search is performed'

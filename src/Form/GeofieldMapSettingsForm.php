@@ -67,6 +67,19 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#placeholder' => $this->t('Input a valid Gmap API Key'),
     ];
 
+    $form['geocoder'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Geocoder Settings'),
+    ];
+    $form['geocoder']['min_terms'] = [
+      '#type' => 'number',
+      '#default_value' => !empty($config->get('geocoder.min_terms')) ? $config->get('geocoder.min_terms') : 5,
+      '#title' => $this->t('The minimum terms number for the Geocoder to start processing'),
+      '#description' => $this->t('A too low value (<= 3) will affect / increase the application Geocode Quota usage.'),
+      '#min' => 2,
+      '#max' => 10,
+    ];
+
     return parent::buildForm($form, $form_state);
   }
 
