@@ -184,7 +184,7 @@
       };
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
-          'plugins=' + encodeURIComponent('googlemaps+openstreetmap+geonames') +
+          'plugins=' + encodeURIComponent('googlemaps') +
           // @todo we need to remove the following line (dev purposes
           '&XDEBUG_SESSION_START=' + 'PHPSTORM' +
           '&address=' +  encodeURIComponent(address)),
