@@ -184,7 +184,7 @@
       };
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
-          'plugins=' + encodeURIComponent('googlemaps') +
+          'plugins=' + encodeURIComponent('googlemaps+openstreetmap') +
           // @todo we need to remove the following line (dev purposes
           '&XDEBUG_SESSION_START=' + 'PHPSTORM' +
           '&address=' +  encodeURIComponent(address)),
@@ -445,6 +445,9 @@
         if (self.map_data[params.mapid].search) {
           // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
           self.map_data[params.mapid].search.autocomplete({
+            // @todo Set a dynamic params.geocoder_min_terms
+            minLength: params.geocoder_min_terms ? params.geocoder_min_terms : 5,
+            delay: 1000,
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
               // Execute the geocoder.
@@ -454,7 +457,7 @@
                 var results = data['results'];
                 response($.map(results, function (item) {
                   return {
-                    label: item.formatted_address,
+                    // the value property is needed to be passed to the select.
                     value: item.formatted_address,
                     latitude: item.geometry.location.lat,
                     longitude: item.geometry.location.lng
@@ -470,6 +473,9 @@
             },
             // This bit is executed upon selection of an address.
             select: function (event, ui) {
+              // Update the Geocode address Search field value with the value (or label)
+              // property that is passed as the selected autocomplete text
+              self.map_data[params.mapid].search.val(ui.item.value);
               // Triggers the Geocode on the Geofield Map Widget
               var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
               self.trigger_geocode(params.mapid, position);
