@@ -170,23 +170,28 @@
     },
 
     // The Geocoder call via Ajax.
-    ajax_geocode: function(address) {
+    ajax_geocode: function(address, mapid) {
+      var self = this;
+      var dataString = {
+        "plugins_options": {
+          "googlemaps": {
+            "apikey": self.map_data[mapid]['gmap_api_key'] ? self.map_data[mapid]['gmap_api_key'] : ""
+          },
+          "geonames": {
+            "username": "demo"
+          },
+        }
+      };
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
-          'plugins=' + encodeURIComponent('bingmaps+googlemaps+openstreetmap+geonames') +
+          'plugins=' + encodeURIComponent('googlemaps+openstreetmap+geonames') +
+          // @todo we need to remove the following line (dev purposes
+          '&XDEBUG_SESSION_START=' + 'PHPSTORM' +
           '&address=' +  encodeURIComponent(address)),
         type:"POST",
         contentType:"application/json; charset=utf-8",
-        dataType:"json",
-        data: {
-          "plugins_options": {
-            "geonames": {
-              "username": "demo"
-            },
-            "openstreetmap": {},
-            "bingmaps": {}
-          }
-        }
+        dataType: "json",
+        data: JSON.stringify(dataString)
       });
     },
 
@@ -443,7 +448,7 @@
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
               // Execute the geocoder.
-              $.when(self.ajax_geocode(request.term).then(
+              $.when(self.ajax_geocode(request.term, params.mapid).then(
                 // On Resolve/Success.
                 function (data, textStatus, jqXHR) {
                 var results = data['results'];
@@ -476,7 +481,7 @@
             if (e.which === 13) {
               e.preventDefault();
               var input = self.map_data[params.mapid].search.val();
-              $.when(self.ajax_geocode(input).then(function (data, textStatus, jqXHR) {
+              $.when(self.ajax_geocode(input, params.mapid).then(function (data, textStatus, jqXHR) {
                 var result = data['results'][0];
                 // Triggers the Geocode on the Geofield Map Widget
                 var position = self.getLatLng(params.mapid, result.geometry.location.lat, result.geometry.location.lng);

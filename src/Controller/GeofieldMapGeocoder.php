@@ -96,12 +96,6 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
 
     // If gmap apikey set, implement GoogleMap Geocoder plugin as Default one.
     $gmap_apikey = $this->getGmapApiKey();
-    if (!empty($gmap_apikey)) {
-      $plugins = ['googlemaps'];
-      $options['googlemaps'] = [
-        'apikey' => $gmap_apikey,
-      ];
-    }
 
     // Proceed only if a not empty address has been provided.
     if (!empty($address)) {
@@ -111,6 +105,15 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
         case 'geocoder_module':
           $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : $plugins;
           $options = !empty($request_content['plugins_options']) ? $request_content['plugins_options'] : $options;
+
+          // If the googlemaps plugin is set,
+          // use/force the $gmap_apikey as plugin option.
+          if (!empty($gmap_apikey) &&
+            (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
+            $options['googlemaps'] = [
+              'apikey' => $gmap_apikey,
+            ];
+          }
 
           if (empty($plugins)) {
             $data = [
