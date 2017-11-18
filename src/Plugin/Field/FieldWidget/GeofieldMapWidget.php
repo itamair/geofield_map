@@ -143,8 +143,16 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
   /**
    * GeofieldMapWidget constructor.
    *
-   * {@inheritdoc}
-   *
+   * @param string $plugin_id
+   *   The plugin_id for the formatter.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   The definition of the field to which the formatter is associated.
+   * @param array $settings
+   *   The formatter settings.
+   * @param array $third_party_settings
+   *   Any third party settings settings.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   A config factory for retrieving required config objects.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
@@ -263,43 +271,33 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $gmap_api_key = $this->getGmapApiKey();
 
-    // If it is defined GMap API Key in the general configuration,
-    // force to use it, instead.
+    // Define the Google Maps API Key value message markup.
     if (!empty($gmap_api_key)) {
-      $elements['map_google_api_key'] = [
-        '#type' => 'value',
-        '#value' => $gmap_api_key,
-        'markup' => [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link', [
-            '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-              'query' => [
-                'destination' => Url::fromRoute('<current>')
-                  ->toString(),
-              ],
-            ])),
-          ]),
-        ],
-      ];
+      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Geocode Address and ReverseGeocode functionalities (based onto Google Map Geocoder)</div>', [
+        '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')
+              ->toString(),
+          ],
+        ])),
+      ]);
     }
     else {
-      $elements['map_google_api_key_missing'] = [
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
-          '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
-        '#attributes' => [
-          'class' => ['geofield-map-apikey-missing'],
-        ],
-      ];
+      $map_google_api_key_value = t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities won't be available.<br>@settings_page_link", [
+        '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+          'query' => [
+            'destination' => Url::fromRoute('<current>')
+              ->toString(),
+          ],
+        ])),
+      ]);
     }
+
+    $elements['map_google_api_key'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $map_google_api_key_value,
+    ];
 
     $elements['map_library'] = array(
       '#type' => 'select',
@@ -456,7 +454,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     );
     $elements['geoaddress_field']['hidden'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('<strong>Hide</strong> this field in the Content Edit Form ?'),
+      '#title' => $this->t('<strong>Hide</strong> this field in the Content Edit Form'),
       '#description' => $this->t('If checked, the selected Geoaddress Field will be Hidden to the user in the edit form, </br>and totally managed by the Geofield Reverse Geocode'),
       '#default_value' => $this->getSetting('geoaddress_field')['hidden'],
       '#states' => [
@@ -469,7 +467,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     );
     $elements['geoaddress_field']['disabled'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('<strong>Disable</strong> this field in the Content Edit Form ?'),
+      '#title' => $this->t('<strong>Disable</strong> this field in the Content Edit Form'),
       '#description' => $this->t('If checked, the selected Geoaddress Field will be Disabled to the user in the edit form, </br>and totally managed by the Geofield Reverse Geocode'),
       '#default_value' => $this->getSetting('geoaddress_field')['disabled'],
       '#states' => [
@@ -499,21 +497,29 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#markup' => $this->t('Map Type: @state', array('@state' => 'leaflet' == $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'))),
     ];
 
-    $map_gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => !empty($gmap_api_key) ? $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+    // Define the Google Maps API Key value message string.
+    if (!empty($gmap_api_key)) {
+      $state = $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+        'query' => [
+          'destination' => Url::fromRoute('<current>')
+            ->toString(),
+        ],
+      ]));
+    }
+    else {
+      $state = t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
+        '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
               ->toString(),
           ],
-        ])) : t("<span class='geofield-map-apikey-missing'>Gmap Api Key missing (Geocode functionalities not available).</span> @settings_page_link", [
-          '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
+        ])),
+      ]);
+    }
+
+    $map_gmap_api_key = [
+      '#markup' => $this->t('Google Maps API Key: @state', [
+        '@state' => $state,
       ]),
     ];
 
