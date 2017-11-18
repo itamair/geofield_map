@@ -601,7 +601,12 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
 
+    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
+    $config = $this->config;
+    $geofield_map_settings = $config->getEditable('geofield_map.settings');
+
     $gmap_api_key = $this->getGmapApiKey();
+
 
     $latlon_value = [];
 
@@ -626,6 +631,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#geoaddress_field' => $this->getSetting('geoaddress_field'),
       '#error_label' => !empty($element['#title']) ? $element['#title'] : $this->fieldDefinition->getLabel(),
       '#gmap_api_key' => $gmap_api_key,
+      '#geocoder_min_terms' => $geofield_map_settings->get('geocoder.min_terms'),
+      '#geocoder_delay' => $geofield_map_settings->get('geocoder.delay'),
     );
 
     return ['value' => $element];

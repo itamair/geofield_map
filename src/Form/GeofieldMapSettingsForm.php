@@ -73,11 +73,22 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     ];
     $form['geocoder']['min_terms'] = [
       '#type' => 'number',
-      '#default_value' => !empty($config->get('geocoder.min_terms')) ? $config->get('geocoder.min_terms') : 5,
+      '#default_value' => !empty($config->get('geocoder.min_terms')) ? $config->get('geocoder.min_terms') : 4,
       '#title' => $this->t('The minimum terms number for the Geocoder to start processing'),
-      '#description' => $this->t('A too low value (<= 3) will affect / increase the application Geocode Quota usage.'),
+      '#description' => $this->t('A too low value (<= 3) will affect the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters'),
       '#min' => 2,
       '#max' => 10,
+      '#size' => 3,
+    ];
+    $form['geocoder']['delay'] = [
+      '#type' => 'number',
+      '#default_value' => !empty($config->get('geocoder.delay')) ? $config->get('geocoder.delay') : 800,
+      '#title' => $this->t('The delay in milliseconds between when a keystroke occurs and when a Geocode search is started/performed'),
+      '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 5000. A too low value (<= 300) will affect / increase the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters'),
+      '#min' => 300,
+      '#max' => 5000,
+      '#step' => 100,
+      '#size' => 3,
     ];
 
     return parent::buildForm($form, $form_state);
@@ -104,7 +115,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $config = $this->configFactory()->getEditable('geofield_map.settings');
-    $config->set('gmap_api_key', $form_state->getValue('gmap_api_key'));
+
+    $config->setData($form_state->getValues());
 
     $config->save();
 

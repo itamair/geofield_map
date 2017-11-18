@@ -68,6 +68,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }
 
+    // Set the map id.
     $mapid = 'map-' . $element['#id'];
 
     $element['map'] = [
@@ -75,12 +76,15 @@ class GeofieldMap extends GeofieldElementBase {
       '#weight' => 0,
     ];
 
+    // Get the geocoder min terms.
+    $geocoder_min_terms = !empty($geofield_map_settings->get('geocoder.min_terms')) ? $geofield_map_settings->get('geocoder.min_terms') : 5;
+
     if (strlen($element['#gmap_api_key']) > 0) {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
         '#description' => t("Use this to geocode your search location.<br>You need to input at least <u>@terms terms</u> to start the Geocode process.</br>", [
-          '@terms' => !empty($geofield_map_settings->get('geocoder.min_terms')) ? $geofield_map_settings->get('geocoder.min_terms') : 5,
+          '@terms' => $geocoder_min_terms,
         ]),
         '#size' => 60,
         '#maxlength' => 128,
@@ -180,7 +184,6 @@ class GeofieldMap extends GeofieldElementBase {
       $mapid => [
         'entity_operation' => $entity_operation,
         'id' => $element['#id'],
-        'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
         'name' => $element['#name'],
         'lat' => floatval($element['lat']['#default_value']),
         'lng' => floatval($element['lon']['#default_value']),
@@ -204,6 +207,10 @@ class GeofieldMap extends GeofieldElementBase {
         'click_to_find_marker' => $element['#click_to_find_marker'] ? TRUE : FALSE,
         'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
         'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
+        // Geofield Map Geocoder Settings.
+        'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
+        'geocoder_min_terms' => $geocoder_min_terms,
+        'geocoder_delay' => !empty($geofield_map_settings->get('geocoder.delay')) ? $geofield_map_settings->get('geocoder.delay') : 500,
       ],
     ];
 

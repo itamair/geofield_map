@@ -446,8 +446,8 @@
           // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
           self.map_data[params.mapid].search.autocomplete({
             // @todo Set a dynamic params.geocoder_min_terms
-            minLength: params.geocoder_min_terms ? params.geocoder_min_terms : 5,
-            delay: 1000,
+            minLength: params.geocoder_min_terms ? params.geocoder_min_terms : 4,
+            delay: params.geocoder_delay ? params.geocoder_delay : 800,
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
               // Execute the geocoder.
