@@ -172,26 +172,16 @@
     // The Geocoder call via Ajax.
     ajax_geocode: function(address, mapid) {
       var self = this;
-      var dataString = {
-        "plugins_options": {
-          "googlemaps": {
-            "apikey": self.map_data[mapid]['gmap_api_key'] ? self.map_data[mapid]['gmap_api_key'] : ""
-          },
-          "geonames": {
-            "username": "demo"
-          },
-        }
-      };
+      var pluginsOptionsString = self.map_data[mapid]['geocoder_options'];
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
-          'plugins=' + encodeURIComponent('googlemaps+openstreetmap') +
-          // @todo we need to remove the following line (dev purposes
-          '&XDEBUG_SESSION_START=' + 'PHPSTORM' +
+          // @todo get dynamic geocoder plugin
+          'plugins=' + encodeURIComponent('googlemaps') +
           '&address=' +  encodeURIComponent(address)),
         type:"POST",
         contentType:"application/json; charset=utf-8",
         dataType: "json",
-        data: JSON.stringify(dataString)
+        data: pluginsOptionsString // this would correspond to the result of JSON.stringify(jsonString)
       });
     },
 

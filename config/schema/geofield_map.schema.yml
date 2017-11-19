@@ -15,3 +15,6 @@ geofield_map.settings:
         delay:
           type: integer
           label: 'The delay in milliseconds between when a keystroke occurs and when a Geocode search is performed'
+        options:
+          type: string
+          label: 'Geocoders/plugins Specific Options'

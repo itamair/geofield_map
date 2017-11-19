@@ -211,6 +211,7 @@ class GeofieldMap extends GeofieldElementBase {
         'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
         'geocoder_min_terms' => $geocoder_min_terms,
         'geocoder_delay' => !empty($geofield_map_settings->get('geocoder.delay')) ? $geofield_map_settings->get('geocoder.delay') : 500,
+        'geocoder_options' => !empty($geofield_map_settings->get('geocoder.options')) ? $geofield_map_settings->get('geocoder.options') : '',
       ],
     ];
 

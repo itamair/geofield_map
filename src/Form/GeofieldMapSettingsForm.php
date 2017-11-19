@@ -2,6 +2,7 @@
 
 namespace Drupal\geofield_map\Form;
 
+use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -15,6 +16,8 @@ use Drupal\Core\Utility\LinkGeneratorInterface;
  * @see \Drupal\Core\Form\FormBase
  */
 class GeofieldMapSettingsForm extends ConfigFormBase {
+
+  use GeofieldMapFormElementsValidationTrait;
 
   /**
    * The Link generator Service.
@@ -75,7 +78,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#type' => 'number',
       '#default_value' => !empty($config->get('geocoder.min_terms')) ? $config->get('geocoder.min_terms') : 4,
       '#title' => $this->t('The minimum terms number for the Geocoder to start processing'),
-      '#description' => $this->t('A too low value (<= 3) will affect the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters'),
+      '#description' => $this->t('A too low value (<= 3) will affect the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
       '#min' => 2,
       '#max' => 10,
       '#size' => 3,
@@ -84,11 +87,23 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#type' => 'number',
       '#default_value' => !empty($config->get('geocoder.delay')) ? $config->get('geocoder.delay') : 800,
       '#title' => $this->t('The delay in milliseconds between when a keystroke occurs and when a Geocode search is started/performed'),
-      '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 5000. A too low value (<= 300) will affect / increase the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters'),
+      '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 5000. A too low value (<= 300) will affect / increase the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
       '#min' => 300,
       '#max' => 5000,
       '#step' => 100,
       '#size' => 3,
+    ];
+
+    // @TODO Set the proper default and placeholder value
+    $default_options = '{"googlemaps":{"apiKey":"AIzaSyCNet9OyalhelnshwPl1uasM-S2Agtc9d4","region":"it","useSsl":"true","locale":"it"},"geonames":{"username":"demo"}}';
+    $form['geocoder']['options'] = [
+      '#type' => 'textarea',
+      '#rows' => 5,
+      '#title' => $this->t('Geocoder Options'),
+      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#default_value' => !empty($config->get('geocoder.options')) ? $config->get('geocoder.options') : $default_options,
+      '#placeholder' => $default_options,
+      '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
     return parent::buildForm($form, $form_state);

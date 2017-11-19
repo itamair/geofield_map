@@ -631,8 +631,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#geoaddress_field' => $this->getSetting('geoaddress_field'),
       '#error_label' => !empty($element['#title']) ? $element['#title'] : $this->fieldDefinition->getLabel(),
       '#gmap_api_key' => $gmap_api_key,
-      '#geocoder_min_terms' => $geofield_map_settings->get('geocoder.min_terms'),
-      '#geocoder_delay' => $geofield_map_settings->get('geocoder.delay'),
     );
 
     return ['value' => $element];

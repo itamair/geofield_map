@@ -110,7 +110,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
           // use/force the $gmap_apikey as plugin option.
           if (!empty($gmap_apikey) &&
             (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
-            $options['googlemaps']['apikey'] = $gmap_apikey;
+            $options['googlemaps']['apiKey'] = $gmap_apikey;
           }
 
           if (empty($plugins)) {
