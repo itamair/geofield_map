@@ -104,15 +104,13 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
         // If the Geocoder Module exists, geocode with it ...
         case 'geocoder_module':
           $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : $plugins;
-          $options = !empty($request_content['plugins_options']) ? $request_content['plugins_options'] : $options;
+          $options = !empty($request_content) ? $request_content : $options;
 
           // If the googlemaps plugin is set,
           // use/force the $gmap_apikey as plugin option.
           if (!empty($gmap_apikey) &&
             (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
-            $options['googlemaps'] = [
-              'apikey' => $gmap_apikey,
-            ];
+            $options['googlemaps']['apikey'] = $gmap_apikey;
           }
 
           if (empty($plugins)) {
