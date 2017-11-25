@@ -100,10 +100,52 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#type' => 'textarea',
       '#rows' => 5,
       '#title' => $this->t('Geocoder Options'),
-      '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
+      '#description' => $this->t('An object literal of additional Geocoders options.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
       '#default_value' => !empty($config->get('geocoder.options')) ? $config->get('geocoder.options') : $default_options,
       '#placeholder' => $default_options,
       '#element_validate' => [[get_class($this), 'jsonValidate']],
+    ];
+
+    $form['geocoder']['plugins_checkboxes'] = [
+      '#type' => 'table',
+      '#header' => [t('Geocoder plugins'), $this->t('Weight')],
+      '#tabledrag' => [[
+        'action' => 'order',
+        'relationship' => 'sibling',
+        'group' => 'plugins-order-weight',
+      ],
+      ],
+      '#caption' => $this->t('Select the Geocoder plugins to use, you can reorder them. The first one to return a valid value will be used.'),
+    ];
+
+    // Get the default/selected geocoder plugins.
+    $default_plugins = $config->get('geocoder.plugins');
+    $plugins = array_combine($default_plugins, $default_plugins);
+    foreach (\Drupal::service('plugin.manager.geocoder.provider')->getPluginsAsOptions() as $plugin_id => $plugin_name) {
+      // Non-default values are appended at the end.
+      $plugins[$plugin_id] = $plugin_name;
+    }
+    foreach ($plugins as $plugin_id => $plugin_name) {
+      $form['geocoder']['plugins_checkboxes'][$plugin_id] = [
+        'checked' => [
+          '#type' => 'checkbox',
+          '#title' => $plugin_name,
+          '#default_value' => in_array($plugin_id, $default_plugins),
+        ],
+        'weight' => array(
+          '#type' => 'weight',
+          '#title' => $this->t('Weight for @title', ['@title' => $plugin_name]),
+          '#title_display' => 'invisible',
+          '#attributes' => ['class' => ['plugins-order-weight']],
+        ),
+        '#attributes' => ['class' => ['draggable']],
+      ];
+    }
+
+    // Define the form element that will store the set plugins.
+    $form['geocoder']['plugins'] = [
+      '#type' => 'value',
+      '#value' => $default_plugins,
     ];
 
     return parent::buildForm($form, $form_state);
@@ -129,11 +171,29 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $config = $this->configFactory()->getEditable('geofield_map.settings');
 
-    $config->setData($form_state->getValues());
+    // Get all the form state values, in an array structure.
+    $form_state_values = $form_state->getValues();
 
-    $config->save();
+    // Reset and refill the $form_state geocoder plugins value.
+    $form_state_values['geocoder']['plugins'] = [];
+    foreach ($form_state_values['geocoder']['plugins_checkboxes'] as $k => $option) {
+      if ($option['checked']) {
+        $form_state_values['geocoder']['plugins'][] = $k;
+      }
+    }
+
+    // Check the googlemaps plugin option if no other is checked and the
+    // gmap_api_key is set.
+    if (!empty($form_state_values['gmap_api_key']) && empty($form_state_values['geocoder']['plugins'])) {
+      $form_state_values['geocoder']['plugins'] = ['googlemaps'];
+    }
+
+    // Update the 'geofield_map.settings' configurations.
+    $this->configFactory()->getEditable('geofield_map.settings')
+      ->set('gmap_api_key', $form_state_values['gmap_api_key'])
+      ->set('geocoder', $form_state_values['geocoder'])
+      ->save();
 
     // Confirmation on form submission.
     drupal_set_message($this->t('The Geofield Map configurations have been saved.'));

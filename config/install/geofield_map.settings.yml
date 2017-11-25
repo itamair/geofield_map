@@ -3,3 +3,5 @@ geocoder:
   min_terms: 4
   delay: 800
   options: ''
+  plugins:
+    - googlemaps
