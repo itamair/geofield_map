@@ -4,4 +4,3 @@ geocoder:
   delay: 800
   options: ''
   plugins:
-    - googlemaps
