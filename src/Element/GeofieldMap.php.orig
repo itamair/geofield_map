@@ -60,11 +60,14 @@ class GeofieldMap extends GeofieldElementBase {
    */
   public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
+<<<<<<< HEAD
     /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
     $config = \Drupal::service('config.factory');
     $geofield_map_settings = $config->get('geofield_map.settings');
 
+=======
     // Conditionally use the Leaflet library from the D8 Module, if enabled.
+>>>>>>> 8.x-1.x
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }
