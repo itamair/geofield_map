@@ -91,7 +91,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
       $form['geocoder'] = [
         '#type' => 'fieldset',
-        '#title' => $this->t('Geocoder Settings'),
+        '#title' => $this->t('Geofield Map Geocoder Settings'),
+        '#description' => $this->t('Geofield Map uses the enabled Geocoder Module to integrate external geocoders. Use the following settings to choose and tune the geocoders you want to use and their working weights.'),
       ];
       $form['geocoder']['min_terms'] = [
         '#type' => 'number',
@@ -179,14 +180,22 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           ],
         ];
 
+        // If Geocoder is active, hide the 'gmap_api_key' form to 'value' type.
+        $form['gmap_api_key'] = [
+          '#type' => 'value',
+          '#value' => $config->get('gmap_api_key'),
+        ];
+
         if ('googlemaps' == $plugin_id) {
           $form['geocoder']['plugins_checkboxes'][$plugin_id]['checked']['#states'] = [
-            'unchecked' => array(
+            'unchecked' => [
               ':input[name="gmap_api_key"]' => ['value' => ''],
-            ),
-            'checked' => array(
-              ':input[name="gmap_api_key"]' => ['!value' => ''],
-            ),
+              ':input[name="geocoder[plugins_checkboxes][googlemaps][options][gmap_api_key]"]' => ['value' => ''],
+            ],
+            'checked' => [
+              [':input[name="gmap_api_key"]' => ['!value' => '']],
+              [':input[name="geocoder[plugins_checkboxes][googlemaps][options][gmap_api_key]"]' => ['!value' => '']],
+            ],
           ];
           //$form['geocoder']['plugins_checkboxes'][$plugin_id]['checked']['#description'] = $this->t('This is the description for this option');
           $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['#open'] = TRUE;
@@ -263,6 +272,10 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       if (!empty($form_state_values['gmap_api_key']) && empty($form_state_values['geocoder']['plugins'])) {
         $form_state_values['geocoder']['plugins'] = ['googlemaps'];
       }
+
+      // If Geocoder is active, set the 'gmap_api_key' (hidden) form value from
+      // the 'googlemaps plugin gmap_api_key' value.
+      $geofield_map_settings->set('gmap_api_key', $form_state_values['geocoder']['plugins_checkboxes']['googlemaps']['options']['gmap_api_key']);
 
       // Update the geofield_map 'geocoder' configurations.
       $geofield_map_settings->set('geocoder', $form_state_values['geocoder']);
