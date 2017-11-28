@@ -99,7 +99,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode_missing'] = array(
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => t('Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities are not available.'),
+        '#value' => t('Gmap Api Key missing | The Widget Geocode and ReverseGeocode functionalities are not available.'),
         '#attributes' => [
           'class' => ['gmap-apikey-missing geofield-map-warning'],
         ],
