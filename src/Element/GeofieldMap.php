@@ -4,6 +4,7 @@ namespace Drupal\geofield_map\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield\Element\GeofieldElementBase;
+use Drupal\Core\Url;
 
 /**
  * Provides a Geofield Map form element.
@@ -60,16 +61,11 @@ class GeofieldMap extends GeofieldElementBase {
    */
   public static function latLonProcess(array &$element, FormStateInterface $form_state, array &$complete_form) {
 
-    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
-    $config = \Drupal::service('config.factory');
-    $geofield_map_settings = $config->get('geofield_map.settings');
-
     // Conditionally use the Leaflet library from the D8 Module, if enabled.
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
     }
 
-    // Set the map id.
     $mapid = 'map-' . $element['#id'];
 
     $element['map'] = [
@@ -77,16 +73,11 @@ class GeofieldMap extends GeofieldElementBase {
       '#weight' => 0,
     ];
 
-    // Get the geocoder min terms.
-    $geocoder_min_terms = !empty($geofield_map_settings->get('geocoder.min_terms')) ? $geofield_map_settings->get('geocoder.min_terms') : 5;
-
     if (strlen($element['#gmap_api_key']) > 0) {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
-        '#description' => t("Use this to geocode your search location.<br>You need to input at least <u>@terms terms</u> to start the Geocode process.</br>", [
-          '@terms' => $geocoder_min_terms,
-        ]),
+        '#description' => t("Use this to geocode your search location"),
         '#size' => 60,
         '#maxlength' => 128,
         '#attributes' => [
@@ -95,11 +86,18 @@ class GeofieldMap extends GeofieldElementBase {
         ],
       );
     }
-    else {
+    elseif (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
       $element['map']['geocode_missing'] = array(
         '#type' => 'html_tag',
         '#tag' => 'div',
-        '#value' => t('Gmap Api Key missing | The Widget Geocode and ReverseGeocode functionalities are not available.'),
+        '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities are not available. <br>@settings_page_link", [
+          '@settings_page_link' => \Drupal::linkGenerator()->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
+            'query' => [
+              'destination' => Url::fromRoute('<current>')
+                ->toString(),
+            ],
+          ])),
+        ]),
         '#attributes' => [
           'class' => ['gmap-apikey-missing geofield-map-warning'],
         ],
@@ -186,6 +184,7 @@ class GeofieldMap extends GeofieldElementBase {
       $mapid => [
         'entity_operation' => $entity_operation,
         'id' => $element['#id'],
+        'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
         'name' => $element['#name'],
         'lat' => floatval($element['lat']['#default_value']),
         'lng' => floatval($element['lon']['#default_value']),
@@ -209,11 +208,6 @@ class GeofieldMap extends GeofieldElementBase {
         'click_to_find_marker' => $element['#click_to_find_marker'] ? TRUE : FALSE,
         'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
         'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
-        // Geofield Map Geocoder Settings.
-        'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
-        'geocoder_min_terms' => $geocoder_min_terms,
-        'geocoder_delay' => !empty($geofield_map_settings->get('geocoder.delay')) ? $geofield_map_settings->get('geocoder.delay') : 500,
-        'geocoder_options' => !empty($geofield_map_settings->get('geocoder.options')) ? $geofield_map_settings->get('geocoder.options') : '',
       ],
     ];
 
