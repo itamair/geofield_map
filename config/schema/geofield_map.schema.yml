@@ -20,7 +20,31 @@ geofield_map.settings:
           label: 'Geocoders/plugins Specific Options'
         plugins:
           type: sequence
-          label: 'The available Geocoder Plugins'
+          label: 'The enabled Geocoder Plugins'
           sequence:
             type: string
             label: "The Geocoder Plugin name"
+        plugins_checkboxes:
+          type: sequence
+          label: 'The available Geocoder Plugins selection and options'
+          sequence:
+            type: config_object
+            label: "The Geocoder Plugin Selection, Weight and Options"
+            mapping:
+              checked:
+                type: string
+                label: 'The Checkbox value'
+              weight:
+                type: string
+                label: 'The Weight value'
+              options:
+                type: config_object
+                label: 'The Geocoder Options'
+                mapping:
+                  gmap_api_key:
+                    type: string
+                    label: 'Google Maps API Key'
+                  json_options:
+                    type: string
+                    label: 'The geocoder options data in json format'
+
