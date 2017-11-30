@@ -1,6 +1,6 @@
 gmap_api_key: ''
 geocoder:
   min_terms: 4
-  delay: 800
+  delay: 500
   options: ''
   plugins:
