@@ -172,11 +172,11 @@
     // The Geocoder call via Ajax.
     ajax_geocode: function(address, mapid) {
       var self = this;
-      var pluginsOptionsString = self.map_data[mapid]['geocoder_options'];
+      var pluginsOptionsString = self.map_data[mapid].geocoder.options;
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
           // @todo get dynamic geocoder plugin
-          'plugins=' + encodeURIComponent('googlemaps') +
+          'plugins=' + encodeURIComponent(self.map_data[mapid].geocoder.plugins.join('+')) +
           '&address=' +  encodeURIComponent(address)),
         type:"POST",
         contentType:"application/json; charset=utf-8",
@@ -421,8 +421,8 @@
           // Apply the Jquery Autocomplete widget, enabled by core/drupal.autocomplete
           self.map_data[params.mapid].search.autocomplete({
             // @todo Set a dynamic params.geocoder_min_terms
-            minLength: params.geocoder_min_terms ? params.geocoder_min_terms : 4,
-            delay: params.geocoder_delay ? params.geocoder_delay : 800,
+            minLength: params.geocoder.min_terms ? params.geocoder.min_terms : 4,
+            delay: params.geocoder.delay ? params.geocoder.delay : 800,
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
               // Execute the geocoder.

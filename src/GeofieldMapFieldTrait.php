@@ -34,6 +34,7 @@ trait GeofieldMapFieldTrait {
    * @var \Drupal\Core\Utility\LinkGeneratorInterface $this->link
    */
 
+  // @TODO Remove this method..
   /**
    * Get the GMap Api Key from the geofield_map settings/configuration.
    *
@@ -43,12 +44,13 @@ trait GeofieldMapFieldTrait {
   private function getGmapApiKey() {
     /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
     $config = $this->config;
-    $geofield_map_settings = $config->getEditable('geofield_map.settings');
+    $geofield_map_settings = $config->get('geofield_map.settings');
     $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
 
     // In the first release of Geofield_Map the google_api_key was stored in
     // the specific Field Widget settings.
-    // So we check and copy it into the geofield_map.settings config, in case it is empty.
+    // So we check and copy it into the geofield_map.settings config,
+    // in case it is empty.
     if (method_exists(get_class($this), 'getSetting') && !empty($this->getSetting('map_google_api_key')) && empty($gmap_api_key)) {
       $gmap_api_key = $this->getSetting('map_google_api_key');
       $geofield_map_settings->set('gmap_api_key', $gmap_api_key)->save();

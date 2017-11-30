@@ -601,12 +601,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
 
-    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
-    $config = $this->config;
-    $geofield_map_settings = $config->getEditable('geofield_map.settings');
-
+    // @TODO betterr get the 'gmap_api_key' from configuration.
     $gmap_api_key = $this->getGmapApiKey();
-
 
     $latlon_value = [];
 

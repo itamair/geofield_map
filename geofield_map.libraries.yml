@@ -23,7 +23,7 @@ geofield_map_widget:
     component:
       css/geofield_map_widget.css: {}
   js:
-    js/geofield_map.js: {}
+    js/geofield_map_widget.js: {}
   dependencies:
       - core/underscore
       - core/jquery
