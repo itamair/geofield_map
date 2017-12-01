@@ -4,7 +4,7 @@ geofield_map.settings:
   mapping:
     gmap_api_key:
       type: string
-      label: 'Google Maps API Key'
+      label: 'Google Maps API Key, that is used from the system without Geocoder module'
     geocoder:
       type: config_object
       label: 'Geocoder settings'

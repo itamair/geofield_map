@@ -1,6 +1,13 @@
 gmap_api_key: ''
 geocoder:
   min_terms: 4
-  delay: 500
-  options: ''
+  delay: 800
+  plugins_checkboxes:
+    googlemaps:
+      options:
+        gmap_api_key: ''
+        json_options: ''
+      checked: '1'
+  options: '{"googlemaps":{"apiKey":""}}'
   plugins:
+    - googlemaps
