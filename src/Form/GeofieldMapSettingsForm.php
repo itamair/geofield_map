@@ -181,9 +181,9 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#title' => $this->t('The delay (in milliseconds) between pressing a key in the Address input field and starting the Geocoder search.'),
       '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 5000. A too low value (<= 300) will affect / increase the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
       '#min' => 300,
-      '#max' => 5000,
+      '#max' => 2000,
       '#step' => 100,
-      '#size' => 3,
+      '#size' => 4,
     ];
 
     // Get the default/selected geocoder plugins.
