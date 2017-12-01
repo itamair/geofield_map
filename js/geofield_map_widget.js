@@ -172,16 +172,17 @@
     // The Geocoder call via Ajax.
     ajax_geocode: function(address, mapid) {
       var self = this;
-      var pluginsOptionsString = self.map_data[mapid].geocoder.options;
+      var plugins = self.map_data[mapid].geocoder.plugins ? encodeURIComponent(self.map_data[mapid].geocoder.plugins.join('+')) : 'googlemaps'
+      var pluginsOptionsString = self.map_data[mapid].geocoder.options ? self.map_data[mapid].geocoder.options : {'googlemaps' : {'apiKey': self.map_data[mapid].gmap_api_key}};
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
           // @todo get dynamic geocoder plugin
-          'plugins=' + encodeURIComponent(self.map_data[mapid].geocoder.plugins.join('+')) +
+          'plugins=' + plugins +
           '&address=' +  encodeURIComponent(address)),
         type:"POST",
         contentType:"application/json; charset=utf-8",
         dataType: "json",
-        data: pluginsOptionsString // this would correspond to the result of JSON.stringify(jsonString)
+        data: pluginsOptionsString
       });
     },
 

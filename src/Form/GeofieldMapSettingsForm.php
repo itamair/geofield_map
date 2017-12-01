@@ -86,6 +86,21 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#type' => 'value',
       '#value' => $config->get('gmap_api_key'),
     ];
+
+    // @TODO: Remove this element
+    $form['gmap_api_key'] = [
+      '#type' => 'textfield',
+      '#default_value' => $config->get('gmap_api_key'),
+      '#title' => $this->t('Gmap Api Key (@link)', [
+        '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
+          'absolute' => TRUE,
+          'attributes' => ['target' => 'blank'],
+        ])),
+      ]),
+      '#description' => $this->t('Geofield Map requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
+      '#placeholder' => $this->t('Input a valid Gmap API Key'),
+    ];
+
     $form['geocoder'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Geofield Map Geocoder Settings'),
@@ -112,7 +127,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
     // Define base values for the options field.
     $options_field_description = $this->t('An object literal of Geocoder options. The syntax should respect the javascript object notation (json) format. As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.');
-    $options_field_placeholder = '{"key_1": "value_1", "key_2": "value_2", "key_n": "value_n"}';
+    $options_field_placeholder = '{"locale": "it", "key_2": "value_2", "key_n": "value_n"}';
 
     $geocoder_module_link = $this->link->generate(t('Geocoder Module'), Url::fromUri('https://www.drupal.org/project/geocoder', [
       'absolute' => TRUE,
@@ -255,9 +270,11 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           '#placeholder' => $this->t('Input a valid Gmap API Key'),
         ];
 
+        $options_field_description_google_maps_geocoder_warning = $this->moduleHandler->moduleExists('geocoder') ? '<br><u>Note: The Google Maps Geocoding API "language" parameter is translated into "locale" in Geocoder Module API.</u>' : '';
+
         // Override for GoogleMaps base values for its options fields.
-        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#description'] = $this->t('<strong>Add here additional options (besides the Gmap Api Key).</strong>') . ' ' . $options_field_description;
-        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#placeholder'] = '{"region":"it","useSsl":"true","locale":"it"}';
+        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#description'] = $this->t('<strong>Add here additional options (besides the Gmap Api Key).</strong>') . ' ' . $options_field_description . $options_field_description_google_maps_geocoder_warning;
+        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#placeholder'] = $this->moduleHandler->moduleExists('geocoder') ? '{"region":"it","useSsl":"true","locale":"it"}' : '{"region":"it","useSsl":"true","language":"it"}';
 
       }
 
@@ -310,39 +327,11 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     // Get all the form state values, in an array structure.
     $form_state_values = $form_state->getValues();
 
-    // By Default, update the geofield_map 'gmap_api_key' settings
-    // with the $form_state_values['gmap_api_key'].
-    $geofield_map_settings->set('gmap_api_key', $form_state_values['gmap_api_key']);
-
-    // By default reset the geofield map geocoder settings, if not empty/null.
-    if (!empty($geofield_map_settings->get('geocoder'))) {
-      $geofield_map_settings->clear('geocoder');
-    }
-
-    // Add extended Geofield Map settings.
-    $this->setGeocodersConfigurations($form_state_values, $geofield_map_settings);
-
-    // Save the geofield_map settings updates.
-    $geofield_map_settings->save();
-
-    // Output confirmation of the form submission.
-    drupal_set_message($this->t('The Geofield Map configurations have been saved.'));
-  }
-
-  /**
-   * Set additional Geocoders options from Geocoder Module integration.
-   *
-   * @param array $form_state_values
-   *   The Form state values.
-   * @param \Drupal\Core\Config\Config $geofield_map_settings
-   *   The complete geofield_map_settings to set/update.
-   */
-  protected function setGeocodersConfigurations(array $form_state_values, Config &$geofield_map_settings) {
+    // Add extended Geofield Map Geocoders settings.
     $form_state_values_geocoder_plugins_options = [];
 
     // Reset and refill the $form_state geocoder plugins value.
     $form_state_values['geocoder']['plugins'] = [];
-
     foreach ($form_state_values['geocoder']['plugins_checkboxes'] as $k => $plugin) {
       if ($plugin['checked']) {
         $form_state_values['geocoder']['plugins'][] = $k;
@@ -364,6 +353,12 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
     // Update the geofield_map 'geocoder' configurations.
     $geofield_map_settings->set('geocoder', $form_state_values['geocoder']);
+
+    // Save the geofield_map settings updates.
+    $geofield_map_settings->save();
+
+    // Output confirmation of the form submission.
+    drupal_set_message($this->t('The Geofield Map configurations have been saved.'));
   }
 
 }

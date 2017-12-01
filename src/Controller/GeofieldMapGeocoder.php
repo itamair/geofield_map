@@ -78,8 +78,9 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
 
     $geocoder_service = $this->moduleHandler->moduleExists('geocoder') ? 'geocoder_module' : 'googlemaps_service';
 
-    $plugins = [];
-    $options = [];
+    $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : [];
+    $options = !empty($request_content) ? $request_content : [];
+
     $data = [
       'geocode' => [
         'status' => FALSE,
@@ -97,14 +98,12 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
     // If gmap apikey set, implement GoogleMap Geocoder plugin as Default one.
     $gmap_apikey = $this->getGmapApiKey();
 
-    // Proceed only if a not empty address has been provided.
-    if (!empty($address)) {
+    // Proceed if an address and a geocoder plugin have been provided.
+    if (!empty($address) && !empty($plugins)) {
 
       switch ($geocoder_service) {
         // If the Geocoder Module exists, geocode with it ...
         case 'geocoder_module':
-          $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : $plugins;
-          $options = !empty($request_content) ? $request_content : $options;
 
           // If the googlemaps plugin is set,
           // use/force the $gmap_apikey as plugin option.
@@ -127,7 +126,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
           $data['results'] = $this->geocoder->geocoderGeocode($address, $plugins, $options);
           if (!empty($data['results'])) {
             $data['geocode']['status'] = TRUE;
-            $data['geocode']['message'] = 'The Geocoder(s) succeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
+            $data['geocode']['message'] = 'The Geocoder(s) succeeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
           }
           else {
             $data['geocode']['message'] = 'The Geocoder(s) failed to geocode ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
@@ -137,7 +136,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
         // ... otherwise try with the Google Map Service.
         case 'googlemaps_service':
           // Get the result of Address geocoderGeocode.
-          $data['results'] = $this->geocoder->googleMapsGeocode($address, $gmap_apikey);
+          $data['results'] = $this->geocoder->googleMapsGeocode($address, $gmap_apikey, $options);
           if (!empty($data['results'])) {
             $data['geocode']['status'] = TRUE;
             $data['geocode']['message'] = 'The direct Google Map Service succeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);

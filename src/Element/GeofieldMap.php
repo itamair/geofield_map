@@ -81,7 +81,7 @@ class GeofieldMap extends GeofieldElementBase {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
-        '#description' => t("Use this to geocode your search location"),
+        '#description' => t("Use this to search and geocode your location"),
         '#size' => 60,
         '#maxlength' => 128,
         '#attributes' => [
@@ -212,7 +212,7 @@ class GeofieldMap extends GeofieldElementBase {
         'click_to_place_marker_id' => $element['#click_to_place_marker'] ? $element['map']['actions']['click_to_place_marker']['#attributes']['id'] : NULL,
         'click_to_place_marker' => $element['#click_to_place_marker'] ? TRUE : FALSE,
         // Geofield Map Geocoder Settings.
-        // @TODO betterr get the 'gmap_api_key' from configuration.
+        // @TODO better get the 'gmap_api_key' from configuration.
         'gmap_api_key' => $element['#gmap_api_key'] && strlen($element['#gmap_api_key']) > 0 ? $element['#gmap_api_key'] : NULL,
         'geocoder' => !empty($geofield_map_settings->get('geocoder')) ? $geofield_map_settings->get('geocoder') : [],
       ],

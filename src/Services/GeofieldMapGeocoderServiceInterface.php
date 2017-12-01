@@ -30,10 +30,12 @@ interface GeofieldMapGeocoderServiceInterface {
    *   The string to geocode.
    * @param string $apiKey
    *   The Google Maps Api Key.
+   * @param array $options
+   *   Additional Google Maps Geocoder Options.
    *
    * @return array
    *   Return Results Array.
    */
-  public function googleMapsGeocode($address, $apiKey);
+  public function googleMapsGeocode($address, $apiKey, array $options);
 
 }
