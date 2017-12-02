@@ -84,7 +84,7 @@
         // Google maps isn't loaded so lazy load google maps.
 
         // Default script path.
-        var scriptPath = '//maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
+        var scriptPath = 'https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false';
 
         // If a Google API key is set, use it.
         if (typeof gmap_api_key !== 'undefined' && gmap_api_key !== null) {
