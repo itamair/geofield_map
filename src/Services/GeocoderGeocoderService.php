@@ -46,6 +46,7 @@ class GeocoderGeocoderService extends GeocoderGoogleMaps implements GeofieldMapG
     parent::__construct($http_client);
     $this->geocoder = $geocoder;
     $this->geocoderDumper = $geocoder_dumper;
+
   }
 
   /**
@@ -76,6 +77,22 @@ class GeocoderGeocoderService extends GeocoderGoogleMaps implements GeofieldMapG
       }
     }
     return $results;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function widgetDebugMessage() {
+
+    $output_message = [];
+
+    // Define an output Debug Message only for the User.
+    if ($this->currentUser->hasPermission('configure geofield_map')) {
+
+
+    }
+
+    return $output_message;
   }
 
 }

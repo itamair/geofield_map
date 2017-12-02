@@ -96,7 +96,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
     ];
 
     // If gmap apikey set, implement GoogleMap Geocoder plugin as Default one.
-    $gmap_apikey = $this->getGmapApiKey();
+    $gmap_apikey = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
     // Proceed if an address and a geocoder plugin have been provided.
     if (!empty($address) && !empty($plugins)) {

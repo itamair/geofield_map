@@ -1,4 +1,4 @@
 services:
   geofield_map.geocoder:
     class: Drupal\geofield_map\Services\GeocoderGoogleMapsService
-    arguments: ['@http_client']
+    arguments: ['@config.factory', '@http_client', '@current_user', '@module_handler', '@link_generator', '@string_translation']

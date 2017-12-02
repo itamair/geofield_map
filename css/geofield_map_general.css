@@ -13,3 +13,8 @@
   color: green;
   font-weight: bold;
 }
+
+/* line 14, ../sass/geofield_map_general.scss */
+.geocoder-message {
+  margin-top: 4px;
+}

@@ -38,4 +38,12 @@ interface GeofieldMapGeocoderServiceInterface {
    */
   public function googleMapsGeocode($address, $apiKey, array $options);
 
+  /**
+   * Output a Geocoder Setup Message in the Geofield Map Widget.
+   *
+   * @return array
+   *   Return Output Message Array.
+   */
+  public function widgetDebugMessage();
+
 }

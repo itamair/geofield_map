@@ -91,6 +91,13 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $GeoPHPWrapper;
 
   /**
+   * The Geofield Map Geocoder service.
+   *
+   * @var \Drupal\geofield_map\Services\G
+   */
+  protected $GeofieldMapGeocoderService;
+
+  /**
    * GeofieldGoogleMapFormatter constructor.
    *
    * @param string $plugin_id
@@ -165,7 +172,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
       $container->get('entity_type.manager'),
       $container->get('entity_display.repository'),
       $container->get('entity_field.manager'),
-      $container->get('geofield.geophp')
+      $container->get('geofield.geophp'),
+      $container->get('geofield_map.geocoder')
     );
   }
 
@@ -206,7 +214,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   public function settingsSummary() {
 
     $settings = $this->getSettings();
-    $gmap_api_key = $this->getGmapApiKey();
+    $gmap_api_key = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
     // Define the Google Maps API Key value message string.
     if (!empty($gmap_api_key)) {

@@ -34,30 +34,6 @@ trait GeofieldMapFieldTrait {
    * @var \Drupal\Core\Utility\LinkGeneratorInterface $this->link
    */
 
-  // @TODO Remove this method..
-  /**
-   * Get the GMap Api Key from the geofield_map settings/configuration.
-   *
-   * @return string
-   *   The GMap Api Key
-   */
-  private function getGmapApiKey() {
-    /* @var \Drupal\Core\Config\ConfigFactoryInterface $config */
-    $config = $this->config;
-    $geofield_map_settings = $config->get('geofield_map.settings');
-    $gmap_api_key = $geofield_map_settings->get('gmap_api_key');
-
-    // In the first release of Geofield_Map the google_api_key was stored in
-    // the specific Field Widget settings.
-    // So we check and copy it into the geofield_map.settings config,
-    // in case it is empty.
-    if (method_exists(get_class($this), 'getSetting') && !empty($this->getSetting('map_google_api_key')) && empty($gmap_api_key)) {
-      $gmap_api_key = $this->getSetting('map_google_api_key');
-      $geofield_map_settings->set('gmap_api_key', $gmap_api_key)->save();
-    }
-    return $gmap_api_key;
-  }
-
   /**
    * Get the Default Settings.
    *
@@ -155,12 +131,12 @@ trait GeofieldMapFieldTrait {
       'geofield_map/geofield_map_general',
     ];
 
-    $gmap_api_key = $this->getGmapApiKey();
+    $gmap_api_key = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
     // Define the Google Maps API Key value message markup.
     if (!empty($gmap_api_key)) {
-      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Widget Geocode and ReverseGeocode functionalities (provided by the Google Map Geocoder)</div>', [
-        '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
+      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmap_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Widget Geocode and ReverseGeocode functionalities (provided by the Google Map Geocoder)</div>', [
+        '@gmap_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
           'query' => [
             'destination' => Url::fromRoute('<current>')
               ->toString(),
@@ -760,7 +736,7 @@ trait GeofieldMapFieldTrait {
    */
   protected function preProcessMapSettings(array &$map_settings) {
     // Set the gmap_api_key as map settings.
-    $map_settings['gmap_api_key'] = $this->getGmapApiKey();
+    $map_settings['gmap_api_key'] = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
     // Transform into simple array values the map_type_control_options_type_ids.
     $map_settings['map_controls']['map_type_control_options_type_ids'] = array_keys(array_filter($map_settings['map_controls']['map_type_control_options_type_ids'], function ($value) {

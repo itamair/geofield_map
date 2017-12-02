@@ -2,8 +2,8 @@
 
 namespace Drupal\geofield_map\Plugin\Field\FieldWidget;
 
+use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
-use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\geofield\Plugin\Field\FieldWidget\GeofieldLatLonWidget;
@@ -15,6 +15,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
 
 /**
  * Plugin implementation of the 'geofield_map' widget.
@@ -29,6 +30,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
  */
 class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactoryPluginInterface {
 
+  use GeofieldMapFormElementsValidationTrait;
   use GeofieldMapFieldTrait;
 
   /**
@@ -58,6 +60,13 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * @var \Drupal\Core\Entity\EntityFieldManagerInterface
    */
   protected $entityFieldManager;
+
+  /**
+   * The Geofield Map Geocoder service.
+   *
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
+   */
+  protected $geofieldMapGeocoder;
 
   /**
    * Lat Lon widget components.
@@ -163,6 +172,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    *   The Entity Field Manager.
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   *   The Geofield Map Geocoder service.
    */
   public function __construct(
     $plugin_id,
@@ -174,13 +185,15 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     TranslationInterface $string_translation,
     RendererInterface $renderer,
     EntityFieldManagerInterface $entity_field_manager,
-    LinkGeneratorInterface $link_generator
+    LinkGeneratorInterface $link_generator,
+    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->entityFieldManager = $entity_field_manager;
     $this->link = $link_generator;
+    $this->geofieldMapGeocoder = $geofield_map_geocoder;
 
     foreach ($this->leafletTileLayers as $k => $tileLayer) {
       $this->leafletTileLayersOptions[$k] = $tileLayer['label'];
@@ -202,7 +215,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       $container->get('string_translation'),
       $container->get('renderer'),
       $container->get('entity_field.manager'),
-      $container->get('link_generator')
+      $container->get('link_generator'),
+      $container->get('geofield_map.geocoder')
     );
   }
 
@@ -269,35 +283,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       ],
     ];
 
-    $gmap_api_key = $this->getGmapApiKey();
-
     // Define the Google Maps API Key value message markup.
-    if (!empty($gmap_api_key)) {
-      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmaps_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Widget Geocode and ReverseGeocode functionalities (provided by the Google Map Geocoder)</div>', [
-        '@gmaps_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-    else {
-      $map_google_api_key_value = t("<span class='geofield-map-warning'>Gmap Api Key missing<br>The Widget Geocode and ReverseGeocode functionalities won't be available.</span> @settings_page_link", [
-        '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-
-    $elements['map_google_api_key'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => $map_google_api_key_value,
-    ];
+    $elements['map_google_api_key'] = $this->geofieldMapGeocoder->widgetDebugMessage();
 
     $elements['map_library'] = array(
       '#type' => 'select',
@@ -487,8 +474,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function settingsSummary() {
 
-    $gmap_api_key = $this->getGmapApiKey();
-
     $map_library = [
       '#markup' => $this->t('Map Library: @state', array('@state' => 'gmap' == $this->getSetting('map_library') ? 'Google Maps' : 'Leaflet Js')),
     ];
@@ -497,31 +482,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
       '#markup' => $this->t('Map Type: @state', array('@state' => 'leaflet' == $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'))),
     ];
 
-    // Define the Google Maps API Key value message string.
-    if (!empty($gmap_api_key)) {
-      $state = $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')
-            ->toString(),
-        ],
-      ]));
-    }
-    else {
-      $state = t("<span class='geofield-map-warning'>Gmap Api Key missing<br>Geocode functionalities not available.</span> @settings_page_link", [
-        '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-
-    $map_gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => $state,
-      ]),
-    ];
+    $map_gmap_api_key = $this->geofieldMapGeocoder->widgetDebugMessage();
 
     $map_type_selector = [
       '#markup' => $this->t('Map Type Selector: @state', array('@state' => $this->getSetting('map_type_selector') ? $this->t('enabled') : $this->t('disabled'))),
@@ -569,8 +530,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
 
     $summary = [
       'map_library' => $map_library,
-      'map_type' => $map_type,
       'map_gmap_api_key' => $map_gmap_api_key,
+      'map_type' => $map_type,
       'map_type_selector' => $map_type_selector,
       'map_dimensions' => $map_dimensions,
       'map_zoom_levels' => $map_zoom_levels,
@@ -601,8 +562,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
 
-    // @TODO betterr get the 'gmap_api_key' from configuration.
-    $gmap_api_key = $this->getGmapApiKey();
+    $gmap_api_key = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
     $latlon_value = [];
 
