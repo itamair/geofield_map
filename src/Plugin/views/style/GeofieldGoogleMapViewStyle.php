@@ -19,6 +19,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -118,7 +119,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *
    * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
    */
-  protected $GeoPHPWrapper;
+  protected $geoPHPWrapper;
 
   /**
    * Current user service.
@@ -126,6 +127,13 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    * @var \Drupal\Core\Session\AccountInterface
    */
   protected $currentUser;
+
+  /**
+   * The Geofield Map Geocoder service.
+   *
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
+   */
+  protected $geofieldMapGeocoder;
 
   /**
    * Constructs a GeofieldGoogleMapView style instance.
@@ -152,6 +160,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The The GeoPHPWrapper.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   Current user service.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   *   The Geofield Map Geocoder service.
    */
   public function __construct(
     array $configuration,
@@ -164,7 +174,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     RendererInterface $renderer,
     LinkGeneratorInterface $link_generator,
     GeoPHPInterface $geophp_wrapper,
-    AccountInterface $current_user
+    AccountInterface $current_user,
+    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
@@ -174,8 +185,9 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->link = $link_generator;
-    $this->GeoPHPWrapper = $geophp_wrapper;
+    $this->geoPHPWrapper = $geophp_wrapper;
     $this->currentUser = $current_user;
+    $this->geofieldMapGeocoder = $geofield_map_geocoder;
   }
 
   /**
@@ -193,7 +205,8 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
       $container->get('renderer'),
       $container->get('link_generator'),
       $container->get('geofield.geophp'),
-      $container->get('current_user')
+      $container->get('current_user'),
+      $container->get('geofield_map.geocoder')
     );
   }
 
@@ -417,12 +430,12 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $options['description_field'] = array('default' => '');
     $options['view_mode'] = array('default' => 'full');
 
-    $geofieldGoogleMapDefaultSettings = [];
+    $geofield_google_map_default_settings = [];
     foreach (self::getDefaultSettings() as $k => $setting) {
-      $geofieldGoogleMapDefaultSettings[$k] = ['default' => $setting];
+      $geofield_google_map_default_settings[$k] = ['default' => $setting];
     }
 
-    return $options + $geofieldGoogleMapDefaultSettings;
+    return $options + $geofield_google_map_default_settings;
   }
 
 }

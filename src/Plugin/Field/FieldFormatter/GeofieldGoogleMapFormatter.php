@@ -19,6 +19,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -88,14 +89,14 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *
    * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
    */
-  protected $GeoPHPWrapper;
+  protected $geoPHPWrapper;
 
   /**
    * The Geofield Map Geocoder service.
    *
-   * @var \Drupal\geofield_map\Services\G
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
    */
-  protected $GeofieldMapGeocoderService;
+  protected $geofieldMapGeocoder;
 
   /**
    * GeofieldGoogleMapFormatter constructor.
@@ -128,6 +129,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The The GeoPHPWrapper.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   *   The Geofield Map Geocoder service.
    */
   public function __construct(
     $plugin_id,
@@ -143,7 +146,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     EntityTypeManagerInterface $entity_type_manager,
     EntityDisplayRepositoryInterface $entity_display_repository,
     EntityFieldManagerInterface $entity_field_manager,
-    GeoPHPInterface $geophp_wrapper
+    GeoPHPInterface $geophp_wrapper,
+    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->config = $config_factory;
@@ -151,7 +155,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->entityTypeManager = $entity_type_manager;
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
-    $this->GeoPHPWrapper = $geophp_wrapper;
+    $this->geoPHPWrapper = $geophp_wrapper;
+    $this->geofieldMapGeocoder = $geofield_map_geocoder;
   }
 
   /**
@@ -214,33 +219,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   public function settingsSummary() {
 
     $settings = $this->getSettings();
-    $gmap_api_key = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
-    // Define the Google Maps API Key value message string.
-    if (!empty($gmap_api_key)) {
-      $state = $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-        'query' => [
-          'destination' => Url::fromRoute('<current>')
-            ->toString(),
-        ],
-      ]));
-    }
-    else {
-      $state = t("<span class='gmap-apikey-missing'>Gmap Api Key missing<br>Some Google Map functionality may not be available.</span> @settings_page_link", [
-        '@settings_page_link' => $this->link->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-
-    $map_gmap_api_key = [
-      '#markup' => $this->t('Google Maps API Key: @state', [
-        '@state' => $state,
-      ]),
-    ];
+    $map_gmap_api_key_geocoder = $this->geofieldMapGeocoder->formatterSetupDebugMessage();
 
     $map_dimensions = [
       '#markup' => $this->t('Map Dimensions: Width: @width - Height: @height', ['@width' => $settings['map_dimensions']['width'], '@height' => $settings['map_dimensions']['height']]),
@@ -462,7 +442,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     }
 
     $summary = [
-      'map_gmap_api_key' => $map_gmap_api_key,
+      'map_gmap_api_key_geocoder' => $map_gmap_api_key_geocoder,
       'map_dimensions' => $map_dimensions,
       'map_empty' => $map_empty,
       'map_center' => $map_center,

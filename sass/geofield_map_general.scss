@@ -1,7 +1,3 @@
-.gmap-apikey-missing {
-  color: #bfbfbf;
-}
-
 .geofield-map-warning {
   color: red;
 }
@@ -13,4 +9,13 @@
 
 .geocoder-message {
   margin-top: 4px;
+}
+
+.gmapapikey-element-description {
+  font-size: 0.9em;
+  color: orange;
+}
+
+.form-item.form-item-geocoder-plugins-checkboxes-googlemaps-options-gmap-api-key {
+  margin-bottom: 8px !important;
 }

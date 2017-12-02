@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
 
 /**
  * Implements the GeofieldMapSettingsForm controller.
@@ -37,6 +38,13 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
   protected $moduleHandler;
 
   /**
+   * The Geofield Map Geocoder service.
+   *
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
+   */
+  protected $geofieldMapGeocoder;
+
+  /**
    * GeofieldMapSettingsForm constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -45,15 +53,19 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    *   The Link Generator service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   *   The Geofield Map Geocoder service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     LinkGeneratorInterface $link_generator,
-    ModuleHandlerInterface $module_handler
+    ModuleHandlerInterface $module_handler,
+    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($config_factory);
     $this->link = $link_generator;
     $this->moduleHandler = $module_handler;
+    $this->geofieldMapGeocoder = $geofield_map_geocoder;
   }
 
   /**
@@ -63,7 +75,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('link_generator'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('geofield_map.geocoder')
     );
   }
 
@@ -78,6 +91,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     // Attach Geofield Map Library.
     $form['#attached']['library'] = [
       'geofield_map/geofield_map_general',
+      'geofield_map/geofield_map_settings',
     ];
 
     // Hide the 'gmap_api_key' form field to 'value' type.
@@ -86,29 +100,21 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#value' => $config->get('gmap_api_key'),
     ];
 
-    // @TODO: Remove this element
-    $form['gmap_api_key'] = [
-      '#type' => 'textfield',
-      '#default_value' => $config->get('gmap_api_key'),
-      '#title' => $this->t('Gmap Api Key (@link)', [
-        '@link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
-          'absolute' => TRUE,
-          'attributes' => ['target' => 'blank'],
-        ])),
-      ]),
-      '#description' => $this->t('Geofield Map requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
-      '#placeholder' => $this->t('Input a valid Gmap API Key'),
-    ];
-
     $form['geocoder'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Geofield Map Geocoder Settings'),
+    ];
+    $form['geocoder']['debug_message'] = [
+      '#type' => 'checkbox',
+      '#default_value' => $config->get('geocoder.debug_message'),
+      '#title' => $this->t('Enable Geocoder Debug Message'),
+      '#description' => $this->t('If checked, a recap / warning message will be output (to the Geofield Map manager user) in the Geofield Map Widget Element regarding the working status and set up of the chosen Geocoder.'),
     ];
     $form['geocoder']['min_terms'] = [
       '#type' => 'number',
       '#default_value' => !empty($config->get('geocoder.min_terms')) ? $config->get('geocoder.min_terms') : 4,
       '#title' => $this->t('The (minimum) number of terms for the Geocoder to start processing.'),
-      '#description' => $this->t('A too low value (<= 3) will affect the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
+      '#description' => $this->t('Valid values ​​for the widget are between 2 and 10. A too low value (<= 3) will affect the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
       '#min' => 2,
       '#max' => 10,
       '#size' => 3,
@@ -116,10 +122,10 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $form['geocoder']['delay'] = [
       '#type' => 'number',
       '#default_value' => !empty($config->get('geocoder.delay')) ? $config->get('geocoder.delay') : 800,
-      '#title' => $this->t('The delay (in milliseconds) between pressing a key in the Address input field and starting the Geocoder search.'),
-      '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 5000. A too low value (<= 300) will affect / increase the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
+      '#title' => $this->t('The delay (in milliseconds) between pressing a key in the Address Input field and starting the Geocoder search.'),
+      '#description' => $this->t('Valid values ​​for the widget are multiples of 100, between 300 and 1500. A too low value (<= 300) will affect / increase the application Geocode Quota usage. Try to increase this value if you are experiencing Quota usage matters.'),
       '#min' => 300,
-      '#max' => 2000,
+      '#max' => 1500,
       '#step' => 100,
       '#size' => 4,
     ];
@@ -240,20 +246,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       // If it is the 'googlemaps' plugin_id.
       if ($plugin_id == 'googlemaps') {
 
-        // If the Geocoder module exists make dynamic check on gmap_api_key
-        // existence.
-        if ($this->moduleHandler->moduleExists('geocoder')) {
-          $form['geocoder']['plugins_checkboxes'][$plugin_id]['checked']['#states'] = [
-            'unchecked' => [
-              ':input[name="geocoder[plugins_checkboxes][googlemaps][options][gmap_api_key]"]' => ['value' => ''],
-            ],
-            'checked' => [
-              ':input[name="geocoder[plugins_checkboxes][googlemaps][options][gmap_api_key]"]' => ['!value' => ''],
-            ],
-          ];
-        }
-
-        $gmap_api_key_text = !$this->moduleHandler->moduleExists('geocoder') && empty($config->get('gmap_api_key')) ? '<span class="geofield-map-warning">Gmap Api Key</span>' : 'Gmap Api Key';
+        $gmap_api_key_text = empty($config->get('gmap_api_key')) ? '<span class="geofield-map-warning">Gmap Api Key</span>' : 'Gmap Api Key';
 
         $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['gmap_api_key'] = [
           '#weight' => -10,
@@ -265,11 +258,14 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
               'attributes' => ['target' => 'blank'],
             ])),
           ]),
-          '#description' => $this->t('Geofield Map requires a valid Google API key for his main features based on Google & Google Maps APIs.'),
+          '#description' => $this->geofieldMapGeocoder->gmapApiKeyElementDescription(),
           '#placeholder' => $this->t('Input a valid Gmap API Key'),
+          '#attributes' => [
+            'class' => ['gmap-api-key'],
+          ],
         ];
 
-        $options_field_description_google_maps_geocoder_warning = $this->moduleHandler->moduleExists('geocoder') ? '<br><u>Note: The Google Maps Geocoding API "language" parameter is translated into "locale" in Geocoder Module API.</u>' : '';
+        $options_field_description_google_maps_geocoder_warning = $this->moduleHandler->moduleExists('geocoder') ? '<br><u>Note: The Google Maps Geocoding API "language" parameter should (and will be) translated into "locale" in Geocoder Module API.</u>' : '';
 
         // Override for GoogleMaps base values for its options fields.
         $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#description'] = $this->t('<strong>Add here additional options (besides the Gmap Api Key).</strong>') . ' ' . $options_field_description . $options_field_description_google_maps_geocoder_warning;
@@ -332,7 +328,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     // Reset and refill the $form_state geocoder plugins value.
     $form_state_values['geocoder']['plugins'] = [];
     foreach ($form_state_values['geocoder']['plugins_checkboxes'] as $k => $plugin) {
-      if ($plugin['checked']) {
+
+      if (isset($plugin['checked']) && $plugin['checked']) {
         $form_state_values['geocoder']['plugins'][] = $k;
         if (!empty($plugin['options']['json_options'])) {
           $form_state_values_geocoder_plugins_options[$k] = JSON::decode($plugin['options']['json_options']);
@@ -341,6 +338,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           $form_state_values_geocoder_plugins_options[$k]['apiKey'] = $plugin['options']['gmap_api_key'];
         }
       }
+
     }
 
     // Set the geocoder options value as combination of single plugin options.

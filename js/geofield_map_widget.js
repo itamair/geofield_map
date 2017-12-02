@@ -36,7 +36,6 @@
 
   Drupal.geoFieldMap = {
 
-    geocoder: null,
     map_data: {},
     firstMapId: null,
 
@@ -370,11 +369,6 @@
       $.noConflict();
 
       if (params.searchid !== null) {
-
-        // Define a google Geocoder, if not yet done.
-        if (!self.geocoder) {
-          self.geocoder = new google.maps.Geocoder();
-        }
 
         // Define the Geocoder Search Field Selector;
         self.map_data[params.mapid].search = $('#' + params.searchid);

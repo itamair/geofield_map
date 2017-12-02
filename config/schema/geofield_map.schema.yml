@@ -15,15 +15,18 @@ geofield_map.settings:
         delay:
           type: integer
           label: 'The delay in milliseconds between when a keystroke occurs and when a Geocode search is performed'
-        options:
+        debug_message:
           type: string
-          label: 'Geocoders/plugins Specific Options'
+          label: 'The option to enable the Geocoder Debug Message for the Geofield Map Manager in the Map Widget Element'
         plugins:
           type: sequence
           label: 'The enabled Geocoder Plugins'
           sequence:
             type: string
             label: "The Geocoder Plugin name"
+        options:
+          type: string
+          label: 'Geocoders/plugins Specific Options'
         plugins_checkboxes:
           type: sequence
           label: 'The available Geocoder Plugins selection and options'

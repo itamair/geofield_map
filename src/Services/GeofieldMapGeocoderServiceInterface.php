@@ -39,11 +39,51 @@ interface GeofieldMapGeocoderServiceInterface {
   public function googleMapsGeocode($address, $apiKey, array $options);
 
   /**
-   * Output a Geocoder Setup Message in the Geofield Map Widget.
+   * Output a Geocoder Setup Message in the Geofield Map Widget Setup.
    *
    * @return array
    *   Return Output Message Array.
    */
-  public function widgetDebugMessage();
+  public function widgetSetupDebugMessage();
+
+  /**
+   * Output a Geocoder Setup Message in the Geofield Map Formatter Setup.
+   *
+   * @return array
+   *   Return Output Message Array.
+   */
+  public function formatterSetupDebugMessage();
+
+  /**
+   * Output a Geocoder Setup Message in the Geofield Map Widget Element.
+   *
+   * @return array
+   *   Return Output Message Array.
+   */
+  public function widgetElementDebugMessage();
+
+  /**
+   * Outputs the Description for the Geofield Map Widget Element.
+   *
+   * @return string
+   *   The output description string.
+   */
+  public function widgetElementDescription();
+
+  /**
+   * Define if the Geocode Address / Functionality is able to work.
+   *
+   * @return bool
+   *   The output description string.
+   */
+  public function geocodeAddressElementCanWork();
+
+  /**
+   * Output the Description message to accompany the Gmap API key field/element.
+   *
+   * @return bool
+   *   The output description string.
+   */
+  public function gmapApiKeyElementDescription();
 
 }

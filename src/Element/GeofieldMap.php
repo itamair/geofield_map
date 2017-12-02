@@ -4,7 +4,6 @@ namespace Drupal\geofield_map\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield\Element\GeofieldElementBase;
-use Drupal\Core\Url;
 
 /**
  * Provides a Geofield Map form element.
@@ -65,6 +64,9 @@ class GeofieldMap extends GeofieldElementBase {
     $config = \Drupal::configFactory();
     $geofield_map_settings = $config->get('geofield_map.settings');
 
+    /* @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder_service */
+    $geofield_map_geocoder_service = \Drupal::service('geofield_map.geocoder');
+
     // Conditionally use the Leaflet library from the D8 Module, if enabled.
     if ($element['#map_library'] == 'leaflet') {
       $element['#attached']['library'][] = \Drupal::moduleHandler()->moduleExists('leaflet') ? 'leaflet/leaflet' : 'geofield_map/leaflet';
@@ -77,11 +79,11 @@ class GeofieldMap extends GeofieldElementBase {
       '#weight' => 0,
     ];
 
-    if (strlen($element['#gmap_api_key']) > 0) {
+    if ($geofield_map_geocoder_service->geocodeAddressElementCanWork()) {
       $element['map']['geocode'] = array(
         '#prefix' => '<label>' . t("Geocode address") . '</label>',
         '#type' => 'textfield',
-        '#description' => t("Use this to search and geocode your location"),
+        '#description' => $geofield_map_geocoder_service->widgetElementDescription(),
         '#size' => 60,
         '#maxlength' => 128,
         '#attributes' => [
@@ -90,23 +92,8 @@ class GeofieldMap extends GeofieldElementBase {
         ],
       );
     }
-    elseif (\Drupal::currentUser()->hasPermission('configure geofield_map')) {
-      $element['map']['geocode_missing'] = array(
-        '#type' => 'html_tag',
-        '#tag' => 'div',
-        '#value' => t("Gmap Api Key missing | The Geocode Address and ReverseGeocode functionalities are not available. <br>@settings_page_link", [
-          '@settings_page_link' => \Drupal::linkGenerator()->generate(t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-            'query' => [
-              'destination' => Url::fromRoute('<current>')
-                ->toString(),
-            ],
-          ])),
-        ]),
-        '#attributes' => [
-          'class' => ['gmap-apikey-missing geofield-map-warning'],
-        ],
-      );
-    }
+
+    $element['map']['geocoder_debug_message'] = $geofield_map_geocoder_service->widgetElementDebugMessage();
 
     $element['map']['geofield_map'] = array(
       '#theme' => 'geofield_google_map',

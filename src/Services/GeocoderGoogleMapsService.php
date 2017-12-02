@@ -7,7 +7,50 @@ use Drupal\Component\Serialization\Json;
 /**
  * Class GeocoderGoogleMapsService.
  */
-class GeocoderGoogleMapsService extends GeocoderGoogleMaps {
+class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
+
+  /**
+   * Get the list of Geocoders Plugins.
+   *
+   * @return string
+   *   The Geocoders Plugin List in a string format.
+   */
+  protected function getGeocodersPlugins() {
+    return !empty($this->config->get('geofield_map.settings')->get('geocoder.plugins')) && $this->config->get('geofield_map.settings')->get('geocoder.plugins') == ['googlemaps'] ? 'Google Maps' : $this->t('No Geocoder enabled');
+  }
+
+  /**
+   * Output a Message for the Empty Gmap API Key.
+   *
+   * @param string $context
+   *   The context identifier.
+   *
+   * @return array
+   *   The output render array.
+   */
+  protected function notEmptyGmapApiKeyMessage($context = 'any') {
+
+    $gmap_api_key_link = $this->currentUser->hasPermission('configure geofield_map')
+      ? $this->link->generate($this->gmapApiKey, $this->geofieldMapSettingsPageUrl)
+      : $this->gmapApiKey;
+
+    $output_message = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $context !== 'debug' ? $this->t('<strong>Gmap Api Key:</strong> @gmap_api_key_link', [
+        '@gmap_api_key_link' => $gmap_api_key_link,
+      ]) : 'Gmap Api Key: ' . $this->gmapApiKey,
+      '#weight' => -5,
+    ];
+
+    if ($context !== 'debug') {
+      $output_message['description'] = $this->gmapApiKeyElementDescription();
+      $output_message['description']['#weight'] = -4;
+    }
+
+    return $output_message;
+
+  }
 
   /**
    * {@inheritdoc}
@@ -36,41 +79,79 @@ class GeocoderGoogleMapsService extends GeocoderGoogleMaps {
   /**
    * {@inheritdoc}
    */
-  public function widgetDebugMessage() {
+  public function widgetSetupDebugMessage() {
 
     // If a Gmap Api key has been defined.
     if (!empty($this->gmapApiKey)) {
-
-      $gmap_api_key_link = $this->currentUser->hasPermission('configure geofield_map')
-        ? $this->link->generate($this->gmapApiKey, $this->geofieldMapSettingsPageUrl)
-        : $this->gmapApiKey;
-
-      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmap_api_key_link<br>A valid Gmap Api Key enables the Geocode and ReverseGeocode functionalities (provided by the Google Map Geocoder)', [
-        '@gmap_api_key_link' => $gmap_api_key_link,
-      ]);
+      $output_message = $this->notEmptyGmapApiKeyMessage();
     }
     // Else the Gmap Api key is missing.
     else {
-
-      $geofield_map_settings_page_link = $this->currentUser->hasPermission('configure geofield_map')
-        ? $this->link->generate(t('Set it in the Geofield Map Configuration Page'), $this->geofieldMapSettingsPageUrl)
-        : t('You need proper permissions for the Geofield Map Configuration Page');
-
-      $map_google_api_key_value = $this->t("<span class='geofield-map-warning'>Gmap Api Key missing (Geocode and ReverseGeocode functionalities won't be available)</span><br>@geofield_map_settings_page_link", [
-        '@geofield_map_settings_page_link' => $geofield_map_settings_page_link,
-      ]);
+      $output_message = $this->emptyGmapApiKeyMessage('widget');
     }
 
-    $output_message = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => $map_google_api_key_value,
-      '#attributes' => [
-        'class' => ['geocoder-message'],
-      ],
-    ];
+    return $output_message;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function formatterSetupDebugMessage() {
+
+    // If a Gmap Api key has been defined.
+    if (!empty($this->gmapApiKey)) {
+      $output_message = $this->notEmptyGmapApiKeyMessage();
+    }
+    // Else the Gmap Api key is missing.
+    else {
+      $output_message = $this->emptyGmapApiKeyMessage('formatter');
+    }
 
     return $output_message;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function widgetElementDebugMessage() {
+
+    $output_message = [];
+
+    if ($this->currentUser->hasPermission('configure geofield_map') && $this->geocoderDebugMessageFlag) {
+
+      // If a Gmap Api key has been defined.
+      if (!empty($this->gmapApiKey)) {
+        $output_message = [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          '#value' => t('Geocoder Module Integration not enabled') . '<br>',
+          'geocoder-debug-message' => $this->geocoderDebugMessage,
+          '#attributes' => [
+            'class' => ['geocoder-debug-message'],
+          ],
+        ];
+      }
+      else {
+        $output_message = [
+          '#type' => 'html_tag',
+          '#tag' => 'div',
+          'value' => $this->emptyGmapApiKeyMessage(),
+          '#attributes' => [
+            'class' => ['geocoder-debug-message'],
+          ],
+        ];
+      }
+
+    }
+
+    return $output_message;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function geocodeAddressElementCanWork() {
+    return !empty($this->gmapApiKey);
   }
 
 }

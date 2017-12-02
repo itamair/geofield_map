@@ -195,8 +195,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $this->link = $link_generator;
     $this->geofieldMapGeocoder = $geofield_map_geocoder;
 
-    foreach ($this->leafletTileLayers as $k => $tileLayer) {
-      $this->leafletTileLayersOptions[$k] = $tileLayer['label'];
+    foreach ($this->leafletTileLayers as $k => $tile_layer) {
+      $this->leafletTileLayersOptions[$k] = $tile_layer['label'];
     }
 
   }
@@ -224,10 +224,14 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    * {@inheritdoc}
    */
   public static function defaultSettings() {
-    return array(
+    return [
+      // Default Location value is conventionally placed on Taranto (Italy),
+        // the Geofield Map Module author birth place, just because it is a
+        // lovely town to be aware of, and visit once in lifetime
+        // (https://en.wikipedia.org/wiki/Taranto).
       'default_value' => [
-        'lat' => '0',
-        'lon' => '0',
+        'lat' => '40.4703',
+        'lon' => '17.2375',
       ],
       'map_library' => 'gmap',
       'map_google_api_key' => '',
@@ -252,7 +256,7 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
         'hidden' => FALSE,
         'disabled' => TRUE,
       ],
-    ) + parent::defaultSettings();
+    ] + parent::defaultSettings();
   }
 
   /**
@@ -284,16 +288,19 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     // Define the Google Maps API Key value message markup.
-    $elements['map_google_api_key'] = $this->geofieldMapGeocoder->widgetDebugMessage();
+    $elements['geocoders'] = $this->geofieldMapGeocoder->widgetSetupDebugMessage();
+
+    $gmap_api_key = $this->config->get('geofield_map.settings')->get('gmap_api_key');
+    $maps_libraries = !empty($gmap_api_key) ? [
+      'gmap' => $this->t('Google Maps'),
+      'leaflet' => $this->t('Leaflet js'),
+    ] : ['leaflet' => $this->t('Leaflet js')];
 
     $elements['map_library'] = array(
       '#type' => 'select',
       '#title' => $this->t('Map Library'),
-      '#default_value' => $this->getSetting('map_library'),
-      '#options' => array(
-        'gmap' => $this->t('Google Maps'),
-        'leaflet' => $this->t('Leaflet js'),
-      ),
+      '#default_value' => !empty($gmap_api_key) ? $this->getSetting('map_library') : 'leaflet',
+      '#options' => $maps_libraries,
     );
 
     $elements['map_type_google'] = [
@@ -474,6 +481,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public function settingsSummary() {
 
+    $map_gmap_api_key_geocoder = $this->geofieldMapGeocoder->widgetSetupDebugMessage();
+
     $map_library = [
       '#markup' => $this->t('Map Library: @state', array('@state' => 'gmap' == $this->getSetting('map_library') ? 'Google Maps' : 'Leaflet Js')),
     ];
@@ -481,8 +490,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     $map_type = [
       '#markup' => $this->t('Map Type: @state', array('@state' => 'leaflet' == $this->getSetting('map_library') ? $this->getSetting('map_type_leaflet') : $this->getSetting('map_type_google'))),
     ];
-
-    $map_gmap_api_key = $this->geofieldMapGeocoder->widgetDebugMessage();
 
     $map_type_selector = [
       '#markup' => $this->t('Map Type Selector: @state', array('@state' => $this->getSetting('map_type_selector') ? $this->t('enabled') : $this->t('disabled'))),
@@ -529,8 +536,8 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
     ];
 
     $summary = [
+      'map_gmap_api_key_geocoder' => $map_gmap_api_key_geocoder,
       'map_library' => $map_library,
-      'map_gmap_api_key' => $map_gmap_api_key,
       'map_type' => $map_type,
       'map_type_selector' => $map_type_selector,
       'map_dimensions' => $map_dimensions,

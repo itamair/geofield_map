@@ -118,11 +118,11 @@ trait GeofieldMapFieldTrait {
    *
    * @return array
    *   The GMap Settings Form*/
-  public function generateGmapSettingsForm($form, FormStateInterface $form_state, $settings, $default_settings) {
+  public function generateGmapSettingsForm(array $form, FormStateInterface $form_state, array $settings, array $default_settings) {
 
     // If it is a Field Formatter, then get the field definition.
-    /* @var \Drupal\Core\Field\FieldDefinitionInterface|NULL $fieldDefinition */
-    $fieldDefinition = property_exists(get_class($this), 'fieldDefinition') ? $this->fieldDefinition : NULL;
+    /* @var \Drupal\Core\Field\FieldDefinitionInterface|NULL $field_definition */
+    $field_definition = property_exists(get_class($this), 'fieldDefinition') ? $this->fieldDefinition : NULL;
 
     $elements = [];
 
@@ -131,35 +131,7 @@ trait GeofieldMapFieldTrait {
       'geofield_map/geofield_map_general',
     ];
 
-    $gmap_api_key = $this->config->get('geofield_map.settings')->get('gmap_api_key');
-
-    // Define the Google Maps API Key value message markup.
-    if (!empty($gmap_api_key)) {
-      $map_google_api_key_value = $this->t('<strong>Gmap Api Key:</strong> @gmap_api_key_link<br><div class="description">A valid Gmap Api Key is needed anyway for the Widget Geocode and ReverseGeocode functionalities (provided by the Google Map Geocoder)</div>', [
-        '@gmap_api_key_link' => $this->link->generate($gmap_api_key, Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-    else {
-      $map_google_api_key_value = $this->t("<span class='gmap-apikey-missing'>Gmap Api Key missing<br>Some Google Map functionality may not be available.</span>@settings_page_link", [
-        '@settings_page_link' => $this->link->generate($this->t('Set it in the Geofield Map Configuration Page'), Url::fromRoute('geofield_map.settings', [], [
-          'query' => [
-            'destination' => Url::fromRoute('<current>')
-              ->toString(),
-          ],
-        ])),
-      ]);
-    }
-
-    $elements['map_google_api_key'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'div',
-      '#value' => $map_google_api_key_value,
-    ];
+    $elements['map_gmap_api_key_geocoder'] = $this->geofieldMapGeocoder->formatterSetupDebugMessage();
 
     $elements['map_dimensions'] = [
       '#type' => 'fieldset',
@@ -200,7 +172,7 @@ trait GeofieldMapFieldTrait {
       '#description' => $this->t('If there are no entries on the map, what should be the output of field?'),
     ];
 
-    if (isset($fieldDefinition)) {
+    if (isset($field_definition)) {
       $elements['map_empty']['empty_behaviour'] = [
         '#type' => 'select',
         '#title' => $this->t('Behaviour'),
@@ -214,7 +186,7 @@ trait GeofieldMapFieldTrait {
         '#default_value' => $settings['map_empty']['empty_message'],
         '#states' => [
           'visible' => [
-            ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_empty][empty_behaviour]"]' => ['value' => '1'],
+            ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_empty][empty_behaviour]"]' => ['value' => '1'],
           ],
         ],
       ];
@@ -306,8 +278,8 @@ trait GeofieldMapFieldTrait {
       '#return_value' => 1,
     ];
 
-    if (isset($fieldDefinition)) {
-      $disable_default_ui_selector = ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][disable_default_ui]"]';
+    if (isset($field_definition)) {
+      $disable_default_ui_selector = ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_controls][disable_default_ui]"]';
     }
     else {
       $disable_default_ui_selector = ':input[name="style_options[map_controls][disable_default_ui]"]';
@@ -363,10 +335,10 @@ trait GeofieldMapFieldTrait {
       '#return_value' => 1,
     ];
 
-    if (isset($fieldDefinition)) {
+    if (isset($field_definition)) {
       $elements['map_controls']['map_type_control_options_type_ids']['#states'] = [
         'visible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_controls][map_type_control]"]' => ['checked' => TRUE],
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_controls][map_type_control]"]' => ['checked' => TRUE],
         ],
         'invisible' => [
           $disable_default_ui_selector => ['checked' => TRUE],
@@ -439,18 +411,18 @@ trait GeofieldMapFieldTrait {
     // Check if a Field Formatter is being managed and define its possible
     // Entity Type and Bundles.
     if (isset($form['#entity_type'])) {
-      $entityType = $form['#entity_type'];
+      $entity_type = $form['#entity_type'];
       $bundles = (!empty($form['#bundle'])) ? [$form['#bundle']] : [];
     }
     elseif (property_exists(get_class($this), 'fieldDefinition')) {
-      $entityType = $this->fieldDefinition->getTargetEntityTypeId();
+      $entity_type = $this->fieldDefinition->getTargetEntityTypeId();
       $field_name = $this->fieldDefinition->getName();
       $fields = $this->entityFieldManager->getFieldMapByFieldType($this->fieldDefinition->getType());
       $bundles = !empty($fields['node'][$field_name]['bundles']) ? $fields['node'][$field_name]['bundles'] : [];
     }
 
     // In case it is a Field Formatter.
-    if (isset($entityType)) {
+    if (isset($entity_type)) {
       $desc_options = [
         '0' => $this->t('- Any - No Infowindow'),
         'title' => $this->t('- Title -'),
@@ -463,14 +435,14 @@ trait GeofieldMapFieldTrait {
         $this->entityFieldManager->getFieldMapByFieldType('text_long')
       );
 
-      foreach ($fields_list[$entityType] as $k => $field) {
+      foreach ($fields_list[$entity_type] as $k => $field) {
         if (isset($bundles) && !empty(array_intersect($field['bundles'], $bundles)) &&
           !in_array($k, ['title', 'revision_log'])) {
           $desc_options[$k] = $k;
         }
       }
 
-      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', array('@entity' => $entityType));
+      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', array('@entity' => $entity_type));
 
       $info_window_source_options = $desc_options;
 
@@ -490,10 +462,10 @@ trait GeofieldMapFieldTrait {
       ];
     }
 
-    if (isset($entityType)) {
+    if (isset($entity_type)) {
       // Get the human readable labels for the entity view modes.
       $view_mode_options = array();
-      foreach ($this->entityDisplayRepository->getViewModes($entityType) as $key => $view_mode) {
+      foreach ($this->entityDisplayRepository->getViewModes($entity_type) as $key => $view_mode) {
         $view_mode_options[$key] = $view_mode['label'];
       }
       // The View Mode drop-down is visible conditional on "#rendered_entity"
@@ -555,10 +527,10 @@ trait GeofieldMapFieldTrait {
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
-    if (isset($fieldDefinition)) {
+    if (isset($field_definition)) {
       $elements['map_oms']['map_oms_options']['#states'] = [
         'visible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_oms][map_oms_control]"]' => ['checked' => TRUE],
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_oms][map_oms_control]"]' => ['checked' => TRUE],
         ],
       ];
     }
@@ -621,8 +593,8 @@ trait GeofieldMapFieldTrait {
       '#return_value' => 1,
     ];
 
-    if (isset($fieldDefinition)) {
-      $custom_style_map_control_selector = ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][custom_style_map][custom_style_control]"]';
+    if (isset($field_definition)) {
+      $custom_style_map_control_selector = ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][custom_style_map][custom_style_control]"]';
     }
     else {
       $custom_style_map_control_selector = ':input[name="style_options[custom_style_map][custom_style_control]"]';
@@ -669,8 +641,8 @@ trait GeofieldMapFieldTrait {
       '#rows' => 5,
       '#title' => $this->t('Marker Cluster Additional Options'),
       '#description' => $this->t('An object literal of additional marker cluster options, that comply with the Marker Clusterer Google Maps JavaScript Library.<br>The syntax should respect the javascript object notation (json) format.<br>As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.'),
-      '#default_value' => $settings['map_markercluster']['markercluster_additional_options'],
-      '#placeholder' => '{"maxZoom": 12, "gridSize": 25, "imagePath": "https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png"}',
+      '#default_value' => !empty($settings['map_markercluster']['markercluster_additional_options']) ? $settings['map_markercluster']['markercluster_additional_options'] : '{"maxZoom": 12, "gridSize": 25}',
+      '#placeholder' => '{"maxZoom": 12, "gridSize": 25}',
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
@@ -691,18 +663,18 @@ trait GeofieldMapFieldTrait {
       ],
     ];
 
-    if (isset($fieldDefinition)) {
+    if (isset($field_definition)) {
       $elements['map_markercluster']['markercluster_additional_options']['#states'] = [
         'visible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => TRUE],
         ],
       ];
       $elements['map_markercluster']['markercluster_warning']['#states'] = [
         'visible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_oms][map_oms_control]"]' => ['checked' => TRUE],
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_oms][map_oms_control]"]' => ['checked' => TRUE],
         ],
         'invisible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => FALSE],
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_markercluster][markercluster_control]"]' => ['checked' => FALSE],
         ],
       ];
     }
@@ -771,7 +743,7 @@ trait GeofieldMapFieldTrait {
     foreach ($items as $delta => $item) {
 
       /* @var \Point $geometry */
-      $geometry = $this->GeoPHPWrapper->load(is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') ? $item->value : $item);
+      $geometry = $this->geoPHPWrapper->load(is_a($item, '\Drupal\geofield\Plugin\Field\FieldType\GeofieldItem') ? $item->value : $item);
       if (!empty($geometry)) {
         $datum = [
           "type" => "Feature",

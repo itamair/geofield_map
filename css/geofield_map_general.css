@@ -1,20 +1,26 @@
 /* line 1, ../sass/geofield_map_general.scss */
-.gmap-apikey-missing {
-  color: #bfbfbf;
-}
-
-/* line 5, ../sass/geofield_map_general.scss */
 .geofield-map-warning {
   color: red;
 }
 
-/* line 9, ../sass/geofield_map_general.scss */
+/* line 5, ../sass/geofield_map_general.scss */
 .geofield-map-success {
   color: green;
   font-weight: bold;
 }
 
-/* line 14, ../sass/geofield_map_general.scss */
+/* line 10, ../sass/geofield_map_general.scss */
 .geocoder-message {
   margin-top: 4px;
+}
+
+/* line 14, ../sass/geofield_map_general.scss */
+.gmapapikey-element-description {
+  font-size: 0.9em;
+  color: orange;
+}
+
+/* line 19, ../sass/geofield_map_general.scss */
+.form-item.form-item-geocoder-plugins-checkboxes-googlemaps-options-gmap-api-key {
+  margin-bottom: 8px !important;
 }

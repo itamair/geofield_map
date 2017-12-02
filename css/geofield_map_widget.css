@@ -20,8 +20,8 @@
 }
 
 /* line 18, ../sass/geofield_map_widget.scss */
-.gmap-apikey-missing.geofield-map-warning,
-.gmap-apikey-missing.geofield-map-warning a {
-  margin: 4px 0;
-  color: lightgray;
+.geocoder-debug-message {
+  margin: 6px 0;
+  font-size: 0.8em;
+  color: orange;
 }
