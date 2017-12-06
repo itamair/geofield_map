@@ -57,8 +57,12 @@ class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
    */
   public function googleMapsGeocode($address, $apiKey, array $options) {
 
+    // Use Http Secure as default, if not forcibly disabled.
+    // Nowadays Google Geocoding Api will work only in https protocol.
+    $web_protocol = empty($options['googlemaps']['useSsl']) ? 'http:' : 'https:';
+
     // Build the Google Maps Geocoding request, with the apiKey.
-    $url = 'https://maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&key=' . $apiKey;
+    $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&key=' . $apiKey;
 
     // Add additional options to the request (besides the apiKey already in)
     foreach ($options['googlemaps'] as $k => $option) {

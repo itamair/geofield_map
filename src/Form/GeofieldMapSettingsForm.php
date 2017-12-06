@@ -262,15 +262,14 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       // If it is the 'googlemaps' plugin_id.
       if ($plugin_id == 'googlemaps') {
 
+        // Set the Use Ssl Checkbox Option (disabled to true)
         $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['use_ssl'] = [
           '#weight' => -3,
           '#type' => 'checkbox',
-          '#default_value' => $config->get('geocoder.plugins_checkboxes.googlemaps.options.useSsl'),
+          '#default_value' => $config->get('geocoder.plugins_checkboxes.googlemaps.options.use_ssl') ? TRUE : FALSE,
           '#title' => $this->t('Use Ssl'),
           '#description' => $this->t('This needs to be checked for the Google Maps Geocoder be able to work.'),
-          '#attributes' => [
-          //  'disabled' => TRUE,
-          ],
+          '#disabled' => TRUE,
         ];
 
         $gmap_api_key_text = empty($config->get('gmap_api_key')) ? '<span class="geofield-map-warning">Gmap Api Key</span>' : 'Gmap Api Key';
@@ -292,8 +291,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
         $options_field_description_google_maps_geocoder_warning = $this->moduleHandler->moduleExists('geocoder') ? '<br><u>Note: The Google Maps Geocoding API "language" parameter should (and will) be translated into "locale" in Geocoder Module API.</u>' : '';
 
         // Override for GoogleMaps base values for its options fields.
-        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#description'] = $this->t('<strong>Add here additional options (besides the Gmap Api Key).</strong>') . ' ' . $options_field_description . $options_field_description_google_maps_geocoder_warning;
-        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#placeholder'] = $this->moduleHandler->moduleExists('geocoder') ? '{"locale":"' . $language_id . '", "region":"' . $language_id . '"}' : '{"language":"' . $language_id . '", "region":"' . $language_id . '",}"';
+        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#description'] = $this->t('<u>Add here additional options <strong>(besides the Use Ssl & Gmap Api Key)</strong>.</u><br>') . ' ' . $options_field_description . $options_field_description_google_maps_geocoder_warning;
+        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#placeholder'] = $this->moduleHandler->moduleExists('geocoder') ? '{"locale":"' . $language_id . '", "region":"' . $language_id . '"}' : '{"language":"' . $language_id . '", "region":"' . $language_id . '"}';
 
       }
 
@@ -358,7 +357,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
         if (!empty($plugin['options']['json_options'])) {
           $form_state_values_geocoder_plugins_options[$k] = JSON::decode($plugin['options']['json_options']);
         }
-        // Set the Google Maps useSsl plugin option.
+        // Set the Google Maps useSsl option, in the Geocoder integration.
         if (isset($plugin['options']['use_ssl']) && !empty($plugin['options']['use_ssl'])) {
           $form_state_values_geocoder_plugins_options[$k]['useSsl'] = $plugin['options']['use_ssl'];
         }
