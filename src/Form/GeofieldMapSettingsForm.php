@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
 
 /**
@@ -38,6 +39,13 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
   protected $moduleHandler;
 
   /**
+   * The language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
+  protected $languageManager;
+
+  /**
    * The Geofield Map Geocoder service.
    *
    * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
@@ -53,6 +61,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    *   The Link Generator service.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   The language manager.
    * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
    *   The Geofield Map Geocoder service.
    */
@@ -60,11 +70,13 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     ConfigFactoryInterface $config_factory,
     LinkGeneratorInterface $link_generator,
     ModuleHandlerInterface $module_handler,
+    LanguageManagerInterface $language_manager,
     GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($config_factory);
     $this->link = $link_generator;
     $this->moduleHandler = $module_handler;
+    $this->languageManager = $language_manager;
     $this->geofieldMapGeocoder = $geofield_map_geocoder;
   }
 
@@ -76,6 +88,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       $container->get('config.factory'),
       $container->get('link_generator'),
       $container->get('module_handler'),
+      $container->get('language_manager'),
       $container->get('geofield_map.geocoder')
     );
   }
@@ -85,6 +98,8 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->configFactory->get('geofield_map.settings');
+
+    $language_id = $this->languageManager->getCurrentLanguage()->getId();
 
     $form['#tree'] = TRUE;
 
@@ -132,7 +147,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
     // Define base values for the options field.
     $options_field_description = $this->t('An object literal of Geocoder options. The syntax should respect the javascript object notation (json) format. As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.');
-    $options_field_placeholder = '{"locale": "it", "key_2": "value_2", "key_n": "value_n"}';
+    $options_field_placeholder = '{"locale":"' . $language_id . '", "key_2": "value_2", "key_n": "value_n"}';
 
     $geocoder_module_link = $this->link->generate(t('Geocoder Module'), Url::fromUri('https://www.drupal.org/project/geocoder', [
       'absolute' => TRUE,
@@ -241,15 +256,27 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           '#placeholder' => $options_field_placeholder,
           '#element_validate' => [[get_class($this), 'jsonValidate']],
         ],
+        '#weight' => 0,
       ];
 
       // If it is the 'googlemaps' plugin_id.
       if ($plugin_id == 'googlemaps') {
 
+        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['use_ssl'] = [
+          '#weight' => -3,
+          '#type' => 'checkbox',
+          '#default_value' => $config->get('geocoder.plugins_checkboxes.googlemaps.options.useSsl'),
+          '#title' => $this->t('Use Ssl'),
+          '#description' => $this->t('This needs to be checked for the Google Maps Geocoder be able to work.'),
+          '#attributes' => [
+          //  'disabled' => TRUE,
+          ],
+        ];
+
         $gmap_api_key_text = empty($config->get('gmap_api_key')) ? '<span class="geofield-map-warning">Gmap Api Key</span>' : 'Gmap Api Key';
 
         $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['gmap_api_key'] = [
-          '#weight' => -10,
+          '#weight' => -2,
           '#type' => 'textfield',
           '#default_value' => $config->get('gmap_api_key'),
           '#title' => new FormattableMarkup($gmap_api_key_text . ' (@gmap_api_key_link)', [
@@ -260,16 +287,13 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           ]),
           '#description' => $this->geofieldMapGeocoder->gmapApiKeyElementDescription(),
           '#placeholder' => $this->t('Input a valid Gmap API Key'),
-          '#attributes' => [
-            'class' => ['gmap-api-key'],
-          ],
         ];
 
-        $options_field_description_google_maps_geocoder_warning = $this->moduleHandler->moduleExists('geocoder') ? '<br><u>Note: The Google Maps Geocoding API "language" parameter should (and will be) translated into "locale" in Geocoder Module API.</u>' : '';
+        $options_field_description_google_maps_geocoder_warning = $this->moduleHandler->moduleExists('geocoder') ? '<br><u>Note: The Google Maps Geocoding API "language" parameter should (and will) be translated into "locale" in Geocoder Module API.</u>' : '';
 
         // Override for GoogleMaps base values for its options fields.
         $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#description'] = $this->t('<strong>Add here additional options (besides the Gmap Api Key).</strong>') . ' ' . $options_field_description . $options_field_description_google_maps_geocoder_warning;
-        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#placeholder'] = $this->moduleHandler->moduleExists('geocoder') ? '{"region":"it","useSsl":"true","locale":"it"}' : '{"region":"it","useSsl":"true","language":"it"}';
+        $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#placeholder'] = $this->moduleHandler->moduleExists('geocoder') ? '{"locale":"' . $language_id . '", "region":"' . $language_id . '"}' : '{"language":"' . $language_id . '", "region":"' . $language_id . '",}"';
 
       }
 
@@ -277,7 +301,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       // if its 'options content' (or 'gmap_api_key') is not empty.
       if (!$this->moduleHandler->moduleExists('geocoder') ||
         !empty($form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['json_options']['#default_value'])
-        || (isset($form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['gmap_api_key']) && !empty($form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['gmap_api_key']['#default_value']))) {
+        || (isset($form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['gmap_api_key']))) {
         $form['geocoder']['plugins_checkboxes'][$plugin_id]['options']['#open'] = TRUE;
       }
 
@@ -334,6 +358,11 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
         if (!empty($plugin['options']['json_options'])) {
           $form_state_values_geocoder_plugins_options[$k] = JSON::decode($plugin['options']['json_options']);
         }
+        // Set the Google Maps useSsl plugin option.
+        if (isset($plugin['options']['use_ssl']) && !empty($plugin['options']['use_ssl'])) {
+          $form_state_values_geocoder_plugins_options[$k]['useSsl'] = $plugin['options']['use_ssl'];
+        }
+        // Set the Google Maps apiKey plugin option.
         if (isset($plugin['options']['gmap_api_key']) && !empty($plugin['options']['gmap_api_key'])) {
           $form_state_values_geocoder_plugins_options[$k]['apiKey'] = $plugin['options']['gmap_api_key'];
         }
