@@ -10,5 +10,6 @@ geocoder:
     googlemaps:
       options:
         gmap_api_key: ''
+        useSsl: '1'
         json_options: ''
       checked: '1'

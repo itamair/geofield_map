@@ -225,14 +225,6 @@ class GeofieldMapWidget extends GeofieldLatLonWidget implements ContainerFactory
    */
   public static function defaultSettings() {
     return [
-      // Default Location value is conventionally placed on Taranto (Italy),
-        // the Geofield Map Module author birth place, just because it is a
-        // lovely town to be aware of, and visit once in lifetime
-        // (https://en.wikipedia.org/wiki/Taranto).
-      'default_value' => [
-        'lat' => '40.4703',
-        'lon' => '17.2375',
-      ],
       'map_library' => 'gmap',
       'map_google_api_key' => '',
       'map_dimensions' => [

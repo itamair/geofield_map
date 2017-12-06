@@ -1,4 +1,8 @@
-/* line 1, ../sass/geofield_map_settings.scss */
+/* line 2, ../sass/geofield_map_settings.scss */
 form.geofield-map-settings .tabledrag-toggle-weight-wrapper {
   display: none;
+}
+/* line 5, ../sass/geofield_map_settings.scss */
+form.geofield-map-settings details .form-item {
+  margin-bottom: 8px;
 }
