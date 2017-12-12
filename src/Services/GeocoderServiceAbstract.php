@@ -253,22 +253,6 @@ abstract class GeocoderServiceAbstract implements GeofieldMapGeocoderServiceInte
   /**
    * {@inheritdoc}
    */
-  public function geocode($address, array $plugins, array $plugin_options = []) {
-    $results = [];
-    return $results;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function reverseGeocode($latLng, $apiKey, array $options) {
-    $results = [];
-    return $results;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function widgetElementDescription() {
     return $this->t('Use this to search and geocode your location (type at least @min_terms terms)', [
       '@min_terms' => $this->config->get('geofield_map.settings')->get('geocoder.min_terms'),
