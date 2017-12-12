@@ -28,15 +28,16 @@ interface GeofieldMapGeocoderServiceInterface {
    *
    * @param string $latLng
    *   The Lat Lng in decimal format string to reverse geocode.
-   * @param string $apiKey
-   *   The Google Maps Api Key.
-   * @param array $options
-   *   Additional Google Maps Geocoder Options.
+   * @param string[] $plugins
+   *   A list of Geocoders plugins identifiers to use.
+   * @param array $plugin_options
+   *   (optional) An associative array with plugin options, keyed plugin by the
+   *   plugin id. Defaults to an empty array.
    *
    * @return array
    *   Return Results Array.
    */
-  public function reverseGeocode($latLng, $apiKey, array $options);
+  public function reverseGeocode($latLng, array $plugins, array $plugin_options = []);
 
   /**
    * Output a Geocoder Setup Message in the Geofield Map Widget Setup.

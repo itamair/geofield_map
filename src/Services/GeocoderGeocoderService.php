@@ -148,6 +148,14 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
   /**
    * {@inheritdoc}
    */
+  public function reverseGeocode($latLng, array $plugins, array $plugin_options = []) {
+    $results = [];
+    return $results;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function widgetSetupDebugMessage() {
 
     // If a Gmap Api key has been defined.

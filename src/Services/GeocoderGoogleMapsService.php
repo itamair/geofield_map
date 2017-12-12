@@ -83,6 +83,24 @@ class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
   /**
    * {@inheritdoc}
    */
+  public function reverseGeocode($latLng, array $plugins, array $plugin_options = []) {
+
+    // Use Http Secure as default, if not forcibly disabled.
+    // Nowadays Google Geocoding Api will work only in https protocol.
+    $web_protocol = empty($plugin_options['googlemaps']['useSsl']) ? 'http:' : 'https:';
+
+    // Build the Google Maps Reverse Geocoding request, with the apiKey.
+    $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?latlng=' . urlencode($latLng) . '&key=' . $this->gmapApiKey;
+
+    /* @var \GuzzleHttp\Client $client */
+    $client = $this->httpClient;
+    $data = Json::decode($client->get($url)->getBody()->getContents());
+    return $data['results'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function widgetSetupDebugMessage() {
 
     // If a Gmap Api key has been defined.

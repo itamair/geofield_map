@@ -493,11 +493,11 @@ trait GeofieldMapFieldTrait {
       '#return_value' => 1,
     ];
 
-    if (isset($fieldDefinition)) {
+    if (isset($field_definition)) {
       $elements['map_marker_and_infowindow']['multivalue_split']['#description'] = $this->t('If checked, each field value will be split into each matching infowindow / geofield, following the same progressive order<br>(the first value of the field will be used otherwise, or as fallback in case of no match)');
       $elements['map_marker_and_infowindow']['multivalue_split']['#states'] = [
         'visible' => [
-          ':input[name="fields[' . $fieldDefinition->getName() . '][settings_edit_form][settings][map_marker_and_infowindow][infowindow_field]"]' => $multivalue_fields_states,
+          ':input[name="fields[' . $field_definition->getName() . '][settings_edit_form][settings][map_marker_and_infowindow][infowindow_field]"]' => $multivalue_fields_states,
         ],
       ];
     }
@@ -534,7 +534,7 @@ trait GeofieldMapFieldTrait {
       );
     }
 
-    if (isset($fieldDefinition)) {
+    if (isset($field_definition)) {
       $elements['map_marker_and_infowindow']['force_open'] = [
         '#type' => 'checkbox',
         '#title' => $this->t('Open Infowindow on Load'),
