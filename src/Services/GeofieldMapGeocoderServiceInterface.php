@@ -8,12 +8,12 @@ namespace Drupal\geofield_map\Services;
 interface GeofieldMapGeocoderServiceInterface {
 
   /**
-   * Performs a Geocode with Geocoder Module Services functionalities.
+   * Geocode with Google Maps or Geocoder Module functionalities.
    *
    * @param string $address
    *   The string to geocode.
    * @param string[] $plugins
-   *   A list of plugin identifiers to use.
+   *   A list of Geocoders plugins identifiers to use.
    * @param array $plugin_options
    *   (optional) An associative array with plugin options, keyed plugin by the
    *   plugin id. Defaults to an empty array.
@@ -21,13 +21,13 @@ interface GeofieldMapGeocoderServiceInterface {
    * @return array
    *   Return Results Array.
    */
-  public function geocoderGeocode($address, array $plugins, array $plugin_options = []);
+  public function geocode($address, array $plugins, array $plugin_options = []);
 
   /**
-   * Performs a Geocode with Google Maps Service functionalities.
+   * Reverse Geocode with Google Maps or Geocoder Module functionalities.
    *
-   * @param string $address
-   *   The string to geocode.
+   * @param string $latLng
+   *   The Lat Lng in decimal format string to reverse geocode.
    * @param string $apiKey
    *   The Google Maps Api Key.
    * @param array $options
@@ -36,7 +36,7 @@ interface GeofieldMapGeocoderServiceInterface {
    * @return array
    *   Return Results Array.
    */
-  public function googleMapsGeocode($address, $apiKey, array $options);
+  public function reverseGeocode($latLng, $apiKey, array $options);
 
   /**
    * Output a Geocoder Setup Message in the Geofield Map Widget Setup.

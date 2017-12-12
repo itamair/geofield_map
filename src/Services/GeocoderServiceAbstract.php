@@ -253,7 +253,7 @@ abstract class GeocoderServiceAbstract implements GeofieldMapGeocoderServiceInte
   /**
    * {@inheritdoc}
    */
-  public function geocoderGeocode($address, array $plugins, array $plugin_options = []) {
+  public function geocode($address, array $plugins, array $plugin_options = []) {
     $results = [];
     return $results;
   }
@@ -261,7 +261,7 @@ abstract class GeocoderServiceAbstract implements GeofieldMapGeocoderServiceInte
   /**
    * {@inheritdoc}
    */
-  public function googleMapsGeocode($address, $apiKey, array $options) {
+  public function reverseGeocode($latLng, $apiKey, array $options) {
     $results = [];
     return $results;
   }

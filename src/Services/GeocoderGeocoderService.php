@@ -107,7 +107,7 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
   /**
    * {@inheritdoc}
    */
-  public function geocoderGeocode($address, array $plugins, array $plugin_options = []) {
+  public function geocode($address, array $plugins, array $plugin_options = []) {
 
     // Eventually, the Google Maps Geocoding API "language" parameter needs to
     // be translated into "locale" in Geocoder Module API.

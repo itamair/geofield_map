@@ -34,6 +34,13 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
   protected $geocoder;
 
   /**
+   * The Geocoder service integration flag.
+   *
+   * @var bool
+   */
+  protected $geocoderIntegration;
+
+  /**
    * Drupal\Core\Extension\ModuleHandler definition.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -54,6 +61,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->geocoder = $geofield_map_geocoder;
+    $this->geocoderIntegration = $this->moduleHandler->moduleExists('geocoder') ? TRUE : FALSE;
   }
 
   /**
@@ -68,18 +76,82 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
   }
 
   /**
+   * Get data from the POST Request.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   The Request.
+   *
+   * @return array
+   *   The requested data.
+   */
+  protected function getRequestData(Request $request) {
+    $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : [];
+    $options = !empty($request->getContent()) ? json_decode($request->getContent(), TRUE) : [];
+    return [$plugins, $options];
+  }
+
+  /**
+   * The Result to output in case of empty plugins.
+   *
+   * @return array
+   *   The result array.
+   */
+  protected function emptyPluginsResult() {
+    $data = [
+      'geocode' => [
+        'status' => FALSE,
+        'message' => 'No Geocoder Plugins Set.',
+      ],
+      'results' => '',
+    ];
+    return $data;
+  }
+
+  /**
+   * Write Geocoding Service Response Status and Message.
+   *
+   * @param array $data
+   *   The Response result data.
+   * @param string $input
+   *   The Request input.
+   * @param array $plugins
+   *   The Geocode Plugins.
+   *
+   * @return array
+   *   The updated Response array
+   */
+  protected function writeResponseStatusAndMessage(array $data, $input, array $plugins) {
+    if (!empty($data['results'])) {
+      $data['geocode']['status'] = TRUE;
+      $data['geocode']['message'] = $this->t('The @geocoder_service succeeded on  @latlng  with the following plugins: @plugins', [
+        '@geocoder_service' => $this->geocoderIntegration ? $this->t('Geocoder(s) Module') : 'Google Map Geocoder API',
+        '@latlng' => $input,
+        '@plugins' => implode(', ', $plugins),
+      ]);
+    }
+    else {
+      $data['geocode']['message'] = $this->t('The @geocoder_service succeeded on  @latlng  with the following plugins: @plugins', [
+        '@geocoder_service' => $this->geocoderIntegration ? $this->t('Geocoder(s) Module') : 'Google Map Geocoder API',
+        '@latlng' => $input,
+        '@plugins' => implode(', ', $plugins),
+      ]);
+    }
+    return $data;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function geocode(Request $request) {
 
     // Get data from the POST Request.
-    $request_content = json_decode($request->getContent(), TRUE);
-    $address = !empty($request->get('address')) ? $request->get('address') : '';
+    list($plugins, $options) = $this->getRequestData($request);
 
-    $geocoder_service = $this->moduleHandler->moduleExists('geocoder') ? 'geocoder_module' : 'googlemaps_service';
-
-    $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : [];
-    $options = !empty($request_content) ? $request_content : [];
+    // If no plugin has been set, then return without processing.
+    if (empty($plugins)) {
+      $data = $this->emptyPluginsResult();
+      return $data;
+    }
 
     $data = [
       'geocode' => [
@@ -95,59 +167,34 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
       ],
     ];
 
-    // If gmap apikey set, implement GoogleMap Geocoder plugin as Default one.
+    $address = !empty($request->get('address')) ? $request->get('address') : '';
+
+    // Try to get the gmap apikey set,
+    // and implement GoogleMap Geocoder plugin as Default one.
     $gmap_apikey = $this->config->get('geofield_map.settings')->get('gmap_api_key');
 
-    // Proceed if an address and a geocoder plugin have been provided.
-    if (!empty($address) && !empty($plugins)) {
+    // If the googlemaps plugin is set,
+    // use/force the $gmap_apikey as plugin option.
+    if (!empty($gmap_apikey) &&
+      (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
+      $options['googlemaps']['apiKey'] = $gmap_apikey;
+    }
 
-      switch ($geocoder_service) {
-        // If the Geocoder Module exists, geocode with it ...
-        case 'geocoder_module':
+    // Proceed if an address have been provided.
+    if (!empty($address)) {
 
-          // If the googlemaps plugin is set,
-          // use/force the $gmap_apikey as plugin option.
-          if (!empty($gmap_apikey) &&
-            (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
-            $options['googlemaps']['apiKey'] = $gmap_apikey;
-          }
-
-          if (empty($plugins)) {
-            $data = [
-              'geocode' => [
-                'status' => FALSE,
-                'message' => 'No Geocoder Plugins Set.',
-              ],
-              'results' => '',
-            ];
-          }
-
-          // Get the result of Address geocoderGeocode.
-          $data['results'] = $this->geocoder->geocoderGeocode($address, $plugins, $options);
-          if (!empty($data['results'])) {
-            $data['geocode']['status'] = TRUE;
-            $data['geocode']['message'] = 'The Geocoder(s) succeeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
-          }
-          else {
-            $data['geocode']['message'] = 'The Geocoder(s) failed to geocode ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
-          }
-          break;
-
-        // ... otherwise try with the Google Map Service.
-        case 'googlemaps_service':
-          // Get the result of Address geocoderGeocode.
-          $data['results'] = $this->geocoder->googleMapsGeocode($address, $gmap_apikey, $options);
-          if (!empty($data['results'])) {
-            $data['geocode']['status'] = TRUE;
-            $data['geocode']['message'] = 'The direct Google Map Service succeded on ' . $address . ' with the following plugins: ' . implode(', ', $plugins);
-          }
-          else {
-            $data['geocode']['message'] = 'The Google Map Service failed to geocode ' . $address;
-          }
-          break;
-
-        default:
+      // If the googlemaps plugin is set,
+      // use/force the $gmap_apikey as plugin option.
+      if (!empty($gmap_apikey) &&
+        (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
+        $options['googlemaps']['apiKey'] = $gmap_apikey;
       }
+
+      // Get the result of Address Geocode.
+      $data['results'] = $this->geocoder->geocode($address, $plugins, $options);
+
+      // Write Response Status and Message.
+      $data = $this->writeResponseStatusAndMessage($data, $address, $plugins);
     }
 
     $response = new CacheableJsonResponse($data);
@@ -160,16 +207,51 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
    */
   public function reverseGeocode(Request $request) {
 
+    // Get data from the POST Request.
+    list($plugins, $options) = $this->getRequestData($request);
+
+    // If no plugin has been set, then return without processing.
+    if (empty($plugins)) {
+      $data = $this->emptyPluginsResult();
+      return $data;
+    }
+
     $data = [
-      'result' => '',
-    ];
-    $data['method'] = 'GET';
-    $data['#cache'] = [
-      'contexts' => [
-        'url.path',
-        'url.query_args',
+      'geocode' => [
+        'status' => FALSE,
+        'message' => 'No Lat Lng coordinates provided',
+      ],
+      'results' => '',
+      '#cache' => [
+        'contexts' => [
+          'url.path',
+          'url.query_args',
+        ],
       ],
     ];
+
+    $latlng = !empty($request->get('latlng')) ? $request->get('latlng') : '';
+
+    // Try to get the gmap apikey set,
+    // and implement GoogleMap Geocoder plugin as Default one.
+    $gmap_apikey = $this->config->get('geofield_map.settings')->get('gmap_api_key');
+
+    // Proceed if a couple of Geo Coordinates have been provided.
+    if (!empty($latlng)) {
+
+      // If the googlemaps plugin is set,
+      // use/force the $gmap_apikey as plugin option.
+      if (!empty($gmap_apikey) &&
+        (in_array('googlemaps', $plugins) && empty($options['googlemaps']['apikey']))) {
+        $options['googlemaps']['apiKey'] = $gmap_apikey;
+      }
+
+      // Get the result of Address Reverse Geocode.
+      $data['results'] = $this->geocoder->reverseGeocode($latlng, $plugins, $options);
+
+      // Write Geocoding Service Response Status and Message.
+      $data = $this->writeResponseStatusAndMessage($data, $latlng, $plugins);
+    }
 
     $response = new CacheableJsonResponse($data);
     $response->addCacheableDependency(CacheableMetadata::createFromRenderArray($data));
