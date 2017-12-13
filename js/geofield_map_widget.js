@@ -168,14 +168,23 @@
       }
     },
 
-    // The Geocoder call via Ajax.
-    ajax_geocode: function(address, mapid) {
+    get_geocoder_plugins: function (mapid) {
       var self = this;
-      var plugins = self.map_data[mapid].geocoder.plugins ? encodeURIComponent(self.map_data[mapid].geocoder.plugins.join('+')) : 'googlemaps'
-      var pluginsOptionsString = self.map_data[mapid].geocoder.options ? self.map_data[mapid].geocoder.options : {'googlemaps' : {'apiKey': self.map_data[mapid].gmap_api_key}};
+      return self.map_data[mapid].geocoder.plugins ? encodeURIComponent(self.map_data[mapid].geocoder.plugins.join('+')) : 'googlemaps';
+    },
+
+    get_geocoder_plugins_options: function (mapid) {
+      var self = this;
+      return self.map_data[mapid].geocoder.options ? self.map_data[mapid].geocoder.options : {'googlemaps' : {'apiKey': self.map_data[mapid].gmap_api_key}};
+    },
+
+    // The Geocoder call via Ajax.
+    geocode: function(mapid, address) {
+      var self = this;
+      var plugins = self.get_geocoder_plugins(mapid);
+      var pluginsOptionsString = self.get_geocoder_plugins_options(mapid);
       return $.ajax({
         url: Drupal.url('geofield_map/geocode?' +
-          // @todo get dynamic geocoder plugin
           'plugins=' + plugins +
           '&address=' +  encodeURIComponent(address)),
         type:"POST",
@@ -188,17 +197,28 @@
     // Reverse geocode.
     reverse_geocode: function (mapid, position) {
       var self = this;
-      if (self.geocoder) {
-        self.geocoder.geocode({latLng: position}, function (results, status) {
-          if (status === google.maps.GeocoderStatus.OK && results[0]) {
-            if (self.map_data[mapid].search) {
-              self.map_data[mapid].search.val(results[0].formatted_address);
-              self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
-            }
-          }
-        });
-      }
-      return status;
+      var plugins = self.get_geocoder_plugins(mapid);
+      var pluginsOptionsString = self.get_geocoder_plugins_options(mapid);
+      var latlng = self.getLatLngUrlValue(mapid, position);
+      self.map_data[mapid].search.addClass('ui-autocomplete-loading');
+      $.ajax({
+        url: Drupal.url('geofield_map/reverse_geocode?' +
+          // @todo get dynamic geocoder plugin
+          'plugins=' + plugins +
+          '&latlng=' +  encodeURIComponent(latlng)),
+        type:"POST",
+        contentType:"application/json; charset=utf-8",
+        dataType: "json",
+        data: pluginsOptionsString
+      }).done(function(data, textStatus, jqXHR) {
+        var results = data['results'];
+        var formatted_address = results.length > 0 && results[0].formatted_address ? results[0].formatted_address : '';
+        if (self.map_data[mapid].search) {
+          self.map_data[mapid].search.val(formatted_address);
+          self.map_data[mapid].search.removeClass('ui-autocomplete-loading');
+          self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
+        }
+      });
     },
 
     // Triggers the Geocode on the Geofield Map Widget
@@ -212,7 +232,7 @@
     },
 
     // Define a Geographical point, from coordinates.
-    getLatLng: function (mapid, lat, lng) {
+    setLatLng: function (mapid, lat, lng) {
       var self = this;
       var latLng = {};
       switch (self.map_data[mapid].map_library) {
@@ -223,6 +243,20 @@
           latLng = new google.maps.LatLng(lat, lng);
       }
       return latLng;
+    },
+
+    getLatLngUrlValue: function (mapid, position) {
+      var self = this;
+      var latLngString = '';
+      switch (self.map_data[mapid].map_library) {
+        case 'leaflet':
+          latLngString = position.lat + ',' + position.lng;
+          break;
+
+        default:
+          latLngString = position.toUrlValue(6);
+      }
+      return latLngString;
     },
 
     // Define the Geofield Map.
@@ -327,7 +361,7 @@
       var latLng = {};
       switch (self.map_data[mapid].map_library) {
         case 'leaflet':
-          latLng = self.map_data[mapid].marker.getLatLng();
+          latLng = self.map_data[mapid].marker.setLatLng();
           break;
 
         default:
@@ -379,7 +413,7 @@
       }
 
       // Define the Geofield Position.
-      var position = self.getLatLng(params.mapid, params.lat, params.lng);
+      var position = self.setLatLng(params.mapid, params.lat, params.lng);
       self.map_data[params.mapid].position = position;
 
       // Define the Geofield Map.
@@ -421,7 +455,7 @@
             // This bit uses the geocoder to fetch address values.
             source: function (request, response) {
               // Execute the geocoder.
-              $.when(self.ajax_geocode(request.term, params.mapid).then(
+              $.when(self.geocode(params.mapid, request.term).then(
                 // On Resolve/Success.
                 function (data, textStatus, jqXHR) {
                 var results = data['results'];
@@ -447,7 +481,7 @@
               // property that is passed as the selected autocomplete text
               self.map_data[params.mapid].search.val(ui.item.value);
               // Triggers the Geocode on the Geofield Map Widget
-              var position = self.getLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
+              var position = self.setLatLng(params.mapid, ui.item.latitude, ui.item.longitude);
               self.trigger_geocode(params.mapid, position);
             }
           });
@@ -457,10 +491,10 @@
             if (e.which === 13) {
               e.preventDefault();
               var input = self.map_data[params.mapid].search.val();
-              $.when(self.ajax_geocode(input, params.mapid).then(function (data, textStatus, jqXHR) {
+              $.when(self.geocode(params.mapid, input).then(function (data, textStatus, jqXHR) {
                 var result = data['results'][0];
                 // Triggers the Geocode on the Geofield Map Widget
-                var position = self.getLatLng(params.mapid, result.geometry.location.lat, result.geometry.location.lng);
+                var position = self.setLatLng(params.mapid, result.geometry.location.lat, result.geometry.location.lng);
                 self.trigger_geocode(params.mapid, position);
               }));
             }
@@ -491,7 +525,7 @@
 
           // Change marker position with mouse click.
           google.maps.event.addListener(map, 'click', function (event) {
-            var position = self.getLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
+            var position = self.setLatLng(params.mapid, event.latLng.lat(), event.latLng.lng());
             self.setMarkerPosition(params.mapid, position);
             self.geofields_update(params.mapid, position);
           });
@@ -500,7 +534,7 @@
 
         if (params.map_library === 'leaflet') {
           marker.on('dragend', function (e) {
-            self.geofields_update(params.mapid, marker.getLatLng());
+            self.geofields_update(params.mapid, marker.setLatLng());
           });
 
           map.on('click', function (event) {

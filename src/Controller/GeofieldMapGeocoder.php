@@ -110,8 +110,8 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
   /**
    * Write Geocoding Service Response Status and Message.
    *
-   * @param array $data
-   *   The Response result data.
+   * @param array $response
+   *   The Response data.
    * @param string $input
    *   The Request input.
    * @param array $plugins
@@ -120,23 +120,24 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
    * @return array
    *   The updated Response array
    */
-  protected function writeResponseStatusAndMessage(array $data, $input, array $plugins) {
-    if (!empty($data['results'])) {
-      $data['geocode']['status'] = TRUE;
-      $data['geocode']['message'] = $this->t('The @geocoder_service succeeded on  @latlng  with the following plugins: @plugins', [
+  protected function writeResponseStatusAndMessage(array $response, $input, array $plugins) {
+    if (!empty($response['results'])) {
+      $status = isset($response['status']) ? $response['status'] : TRUE;
+      $message = $this->t('The @geocoder_service succeeded on @latlng with the following plugins: @plugins', [
         '@geocoder_service' => $this->geocoderIntegration ? $this->t('Geocoder(s) Module') : 'Google Map Geocoder API',
         '@latlng' => $input,
         '@plugins' => implode(', ', $plugins),
       ]);
     }
     else {
-      $data['geocode']['message'] = $this->t('The @geocoder_service succeeded on  @latlng  with the following plugins: @plugins', [
+      $status = isset($response['status']) ? $response['status'] : FALSE;
+      $message = $this->t("The @geocoder_service didn't succeed on @latlng with the following plugins: @plugins", [
         '@geocoder_service' => $this->geocoderIntegration ? $this->t('Geocoder(s) Module') : 'Google Map Geocoder API',
         '@latlng' => $input,
         '@plugins' => implode(', ', $plugins),
       ]);
     }
-    return $data;
+    return [$status, $message];
   }
 
   /**
@@ -190,11 +191,13 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
         $options['googlemaps']['apiKey'] = $gmap_apikey;
       }
 
+      $geocode_response = $this->geocoder->geocode($address, $plugins, $options);
+
       // Get the result of Address Geocode.
-      $data['results'] = $this->geocoder->geocode($address, $plugins, $options);
+      $data['results'] = $geocode_response['results'];
 
       // Write Response Status and Message.
-      $data = $this->writeResponseStatusAndMessage($data, $address, $plugins);
+      list($data['geocode']['status'], $data['geocode']['message']) = $this->writeResponseStatusAndMessage($geocode_response, $address, $plugins);
     }
 
     $response = new CacheableJsonResponse($data);
@@ -246,11 +249,16 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
         $options['googlemaps']['apiKey'] = $gmap_apikey;
       }
 
+      $lat = floatval(explode(',', $latlng)[0]);
+      $lng = floatval(explode(',', $latlng)[1]);
+
+      $reverse_geocode_response = $this->geocoder->reverseGeocode($lat, $lng, $plugins, $options);
+
       // Get the result of Address Reverse Geocode.
-      $data['results'] = $this->geocoder->reverseGeocode($latlng, $plugins, $options);
+      $data['results'] = $reverse_geocode_response['results'];
 
       // Write Geocoding Service Response Status and Message.
-      $data = $this->writeResponseStatusAndMessage($data, $latlng, $plugins);
+      list($data['geocode']['status'], $data['geocode']['message']) = $this->writeResponseStatusAndMessage($reverse_geocode_response, $latlng, $plugins);
     }
 
     $response = new CacheableJsonResponse($data);

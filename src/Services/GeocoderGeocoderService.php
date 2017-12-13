@@ -105,12 +105,12 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
   }
 
   /**
-   * {@inheritdoc}
+   * Manage Language Option for Google Maps Plugin.
+   *
+   * @param array $plugin_options
+   *   Plugin options.
    */
-  public function geocode($address, array $plugins, array $plugin_options = []) {
-
-    // Eventually, the Google Maps Geocoding API "language" parameter needs to
-    // be translated into "locale" in Geocoder Module API.
+  private function manageGoogleMapsLanguageOption(array &$plugin_options) {
     if (isset($plugin_options['googlemaps'])) {
       foreach ($plugin_options['googlemaps'] as $k => $option) {
         if ($k == 'language') {
@@ -118,11 +118,22 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
         }
       }
     }
+  }
 
-    $results = [];
-    /* @var \Geocoder\Model\Address $addresses_collection */
-    $addresses_collection = $this->geocoder->geocode($address, $plugins, $plugin_options)
-      ->all();
+  /**
+   * {@inheritdoc}
+   */
+  public function geocode($address, array $plugins, array $plugin_options = []) {
+
+    // Eventually, the Google Maps Geocoding API "language" parameter needs to
+    // be translated into "locale" in Geocoder Module API.
+    $this->manageGoogleMapsLanguageOption($plugin_options);
+
+    $data = [
+      'results' => [],
+    ];
+    /* @var array $addresses_collection */
+    $addresses_collection = $this->geocoder->geocode($address, $plugins, $plugin_options)->all();
     if (!empty($addresses_collection)) {
       /* @var \Geocoder\Model\Address $geo_address */
       foreach ($addresses_collection as $geo_address) {
@@ -139,18 +150,46 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
           $geo_address_array['geometry'] = $this->dumperPluginManager->createInstance('geofieldmap_geometry')
             ->dump($geo_address);
         }
-        $results[] = $geo_address_array;
+        $data['results'][] = $geo_address_array;
       }
     }
-    return $results;
+    return $data;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function reverseGeocode($latLng, array $plugins, array $plugin_options = []) {
-    $results = [];
-    return $results;
+  public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []) {
+
+    // Eventually, the Google Maps Geocoding API "language" parameter needs to
+    // be translated into "locale" in Geocoder Module API.
+    $this->manageGoogleMapsLanguageOption($plugin_options);
+
+    $data = [
+      'results' => [],
+    ];
+
+    /* @var \Geocoder\Model\AddressCollection $geo_address */
+    $geo_address = $this->geocoder->reverse($lat, $lng, $plugins, $plugin_options);
+
+    if ($geo_address) {
+      $geo_address_array = $geo_address->first()->toArray();
+      // It a formatted_address property is not defined
+      // (as Google Maps Geocoding does), then create it with our own dumper.
+      if (!isset($geo_address_array['formatted_address'])) {
+        $geo_address_array['formatted_address'] = $this->dumperPluginManager->createInstance('geofieldmap_formattedaddress')
+          ->dump($geo_address->first());
+      }
+      // It a formatted_address property is not defined
+      // (as Google Maps Geocoding does), then create it with our own dumper.
+      if (!isset($geo_address_array['geometry'])) {
+        $geo_address_array['geometry'] = $this->dumperPluginManager->createInstance('geofieldmap_geometry')
+          ->dump($geo_address->first());
+      }
+      $data['results'][] = $geo_address_array;
+    }
+
+    return $data;
   }
 
   /**

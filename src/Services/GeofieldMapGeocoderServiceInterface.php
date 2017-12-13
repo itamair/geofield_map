@@ -26,8 +26,10 @@ interface GeofieldMapGeocoderServiceInterface {
   /**
    * Reverse Geocode with Google Maps or Geocoder Module functionalities.
    *
-   * @param string $latLng
-   *   The Lat Lng in decimal format string to reverse geocode.
+   * @param string $lat
+   *   The Latitude in decimal format string to reverse geocode.
+   * @param string $lng
+   *   The Longitude in decimal format string to reverse geocode.
    * @param string[] $plugins
    *   A list of Geocoders plugins identifiers to use.
    * @param array $plugin_options
@@ -37,7 +39,7 @@ interface GeofieldMapGeocoderServiceInterface {
    * @return array
    *   Return Results Array.
    */
-  public function reverseGeocode($latLng, array $plugins, array $plugin_options = []);
+  public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []);
 
   /**
    * Output a Geocoder Setup Message in the Geofield Map Widget Setup.

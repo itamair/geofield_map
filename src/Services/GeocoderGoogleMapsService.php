@@ -10,6 +10,25 @@ use Drupal\Component\Serialization\Json;
 class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
 
   /**
+   * Add additional url options to the request.
+   *
+   * @param string $url
+   *   The url to alter/integrate.
+   * @param array $plugin_options
+   *   The Plugins options.
+   */
+  private function addUrlParameters(&$url, array $plugin_options) {
+    foreach ($plugin_options['googlemaps'] as $k => $option) {
+      if ($k != 'apiKey') {
+        $url .= '&' . rawurlencode($k) . '=' . rawurlencode($option);
+      }
+      if ($k == 'locale') {
+        $url .= '&language=' . rawurlencode($option);
+      }
+    }
+  }
+
+  /**
    * Get the list of Geocoders Plugins.
    *
    * @return string
@@ -64,38 +83,34 @@ class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
     // Build the Google Maps Geocoding request, with the apiKey.
     $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&key=' . $this->gmapApiKey;
 
-    // Add additional options to the request (besides the apiKey already in)
-    foreach ($plugin_options['googlemaps'] as $k => $option) {
-      if ($k != 'apiKey') {
-        $url .= '&' . rawurlencode($k) . '=' . rawurlencode($option);
-      }
-      if ($k == 'locale') {
-        $url .= '&language=' . rawurlencode($option);
-      }
-    }
+    // Add additional url options to the request (besides the apiKey already in)
+    $this->addUrlParameters($url, $plugin_options);
 
     /* @var \GuzzleHttp\Client $client */
     $client = $this->httpClient;
-    $data = Json::decode($client->get($url)->getBody()->getContents());
-    return $data['results'];
+    return Json::decode($client->get($url)->getBody()->getContents());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function reverseGeocode($latLng, array $plugins, array $plugin_options = []) {
+  public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []) {
+
+    $lat_lng = $lat . ',' . $lng;
 
     // Use Http Secure as default, if not forcibly disabled.
     // Nowadays Google Geocoding Api will work only in https protocol.
     $web_protocol = empty($plugin_options['googlemaps']['useSsl']) ? 'http:' : 'https:';
 
     // Build the Google Maps Reverse Geocoding request, with the apiKey.
-    $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?latlng=' . urlencode($latLng) . '&key=' . $this->gmapApiKey;
+    $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?latlng=' . urlencode($lat_lng) . '&key=' . $this->gmapApiKey;
+
+    // Add additional options to the request (besides the apiKey already in)
+    $this->addUrlParameters($url, $plugin_options);
 
     /* @var \GuzzleHttp\Client $client */
     $client = $this->httpClient;
-    $data = Json::decode($client->get($url)->getBody()->getContents());
-    return $data['results'];
+    return Json::decode($client->get($url)->getBody()->getContents());
   }
 
   /**
@@ -141,17 +156,21 @@ class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
 
     if ($this->currentUser->hasPermission('configure geofield_map') && $this->geocoderDebugMessageFlag) {
 
+      $output_message = [
+        '#type' => 'details',
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#title' => $this->t('Debug - Geocoder Module NOT enabled'),
+        'geocoder-debug-message' => $this->geocoderDebugMessage,
+        '#attributes' => [
+          'class' => ['geocoder-debug-message'],
+        ],
+      ];
+
       // If a Gmap Api key has been defined.
+      // Output a further message regarding the Gmap Api Key.
       if (!empty($this->gmapApiKey)) {
-        $output_message = [
-          '#type' => 'html_tag',
-          '#tag' => 'div',
-          '#value' => t('Geocoder Module Integration not enabled') . '<br>',
-          'geocoder-debug-message' => $this->geocoderDebugMessage,
-          '#attributes' => [
-            'class' => ['geocoder-debug-message'],
-          ],
-        ];
+        $output_message['gmap_api_key'] = $this->notEmptyGmapApiKeyMessage('debug');
       }
       else {
         $output_message = [
