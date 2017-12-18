@@ -65,10 +65,3 @@ and select "Geofield Map" as Geofield Widget. Specify the Widget further setting
 - A valid <u>Gmap Api Key</u> is needed** for Google Maps rendering, and for any Geocoding and Reverse Geocoding functionalities, as actually based on the Google Geocoder;
 - Although in mind, there is no <u>Leaflet Map library</u> support at the moment for the Geofield Map Formatter and the  Map Views asPlugin. Please refer to the [Leaflet](https://www.drupal.org/project/leaflet) and the [Leaflet Markercluster](https://www.drupal.org/project/leaflet_markercluster) modules for Leaflet front-end mapping of Drupal 8 Geofields;
 
-#### TODO
-- This patch has to be committed: https://www.drupal.org/project/geocoder/issues/2847892
-Write in IRC to drupol
-
-http://mirchelp-undernet.org/where.html
-/whois drupal
-Hi Drupal ... sorry to disturb you. I am the mantainer of the Geofield Map module (https://www.drupal.org/project/geofield_map)
