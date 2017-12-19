@@ -13,9 +13,9 @@ use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\DumperPluginManager;
 
 /**
- * Class GeocoderGeocoderService.
+ * Class GeocoderServiceGeocoder.
  */
-class GeocoderGeocoderService extends GeocoderServiceAbstract implements GeofieldMapGeocoderServiceInterface {
+class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements GeocoderServiceInterface {
 
   /**
    * GuzzleHttp\Client definition.
@@ -45,6 +45,13 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
    * @var \Drupal\geocoder\ProviderPluginManager
    */
   protected $providerPluginManager;
+
+  /**
+   * The Geofield Map dumper plugin manager service.
+   *
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager
+   */
+  protected $geofieldMapDumperPluginManager;
 
   /**
    * Get the list of Geocoders Plugins.
@@ -86,6 +93,8 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
    *   The geocoder dumper service.
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
    *   The geocoders manager service.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager $geofield_map_dumper_plugin_manager
+   *   The geofield map dumper service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -96,11 +105,13 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
     TranslationInterface $string_translation,
     GeocoderInterface $geocoder,
     DumperPluginManager $dumper_plugin_manager,
-    ProviderPluginManager $provider_plugin_manager
+    ProviderPluginManager $provider_plugin_manager,
+    GeofieldMapGeocoderDumperPluginManager $geofield_map_dumper_plugin_manager
   ) {
     $this->geocoder = $geocoder;
     $this->dumperPluginManager = $dumper_plugin_manager;
     $this->providerPluginManager = $provider_plugin_manager;
+    $this->geofieldMapDumperPluginManager = $geofield_map_dumper_plugin_manager;
     parent::__construct($config_factory, $http_client, $current_user, $module_handler, $link_generator, $string_translation);
   }
 
@@ -121,9 +132,20 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
   }
 
   /**
+   * Get the Selected Geofield Map Fomatter.
+   *
+   * @return string
+   *   The Geofield Map Formatter machine name.
+   */
+  private function getGeofieldMapFormatter() {
+    return $this->config->get('geofield_map.settings')->get('geocoder.formatter');
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function geocode($address, array $plugins, array $plugin_options = []) {
+
 
     // Eventually, the Google Maps Geocoding API "language" parameter needs to
     // be translated into "locale" in Geocoder Module API.
@@ -141,7 +163,8 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
         // It a formatted_address property is not defined
         // (as Google Maps Geocoding does), then create it with our own dumper.
         if (!isset($geo_address_array['formatted_address'])) {
-          $geo_address_array['formatted_address'] = $this->dumperPluginManager->createInstance('geofieldmap_formattedaddress')
+
+          $geo_address_array['formatted_address'] = $this->geofieldMapDumperPluginManager->createInstance($this->getGeofieldMapFormatter())
             ->dump($geo_address);
         }
         // It a formatted_address property is not defined
@@ -177,7 +200,7 @@ class GeocoderGeocoderService extends GeocoderServiceAbstract implements Geofiel
       // It a formatted_address property is not defined
       // (as Google Maps Geocoding does), then create it with our own dumper.
       if (!isset($geo_address_array['formatted_address'])) {
-        $geo_address_array['formatted_address'] = $this->dumperPluginManager->createInstance('geofieldmap_formattedaddress')
+        $geo_address_array['formatted_address'] = $this->geofieldMapDumperPluginManager->createInstance($this->getGeofieldMapFormatter())
           ->dump($geo_address->first());
       }
       // It a formatted_address property is not defined

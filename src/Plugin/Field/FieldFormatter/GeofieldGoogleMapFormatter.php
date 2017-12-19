@@ -19,7 +19,7 @@ use Drupal\Core\Entity\EntityDisplayRepositoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
-use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
+use Drupal\geofield_map\Services\GeocoderServiceInterface;
 
 /**
  * Plugin implementation of the 'geofield_google_map' formatter.
@@ -94,7 +94,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   /**
    * The Geofield Map Geocoder service.
    *
-   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
+   * @var \Drupal\geofield_map\Services\GeocoderServiceInterface
    */
   protected $geofieldMapGeocoder;
 
@@ -129,7 +129,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
    *   The The GeoPHPWrapper.
-   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
    *   The Geofield Map Geocoder service.
    */
   public function __construct(
@@ -147,7 +147,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     EntityDisplayRepositoryInterface $entity_display_repository,
     EntityFieldManagerInterface $entity_field_manager,
     GeoPHPInterface $geophp_wrapper,
-    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+    GeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings);
     $this->config = $config_factory;

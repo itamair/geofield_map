@@ -2,7 +2,15 @@
 form.geofield-map-settings .tabledrag-toggle-weight-wrapper {
   display: none;
 }
-/* line 5, ../sass/geofield_map_settings.scss */
-form.geofield-map-settings details .form-item {
+/* line 6, ../sass/geofield_map_settings.scss */
+form.geofield-map-settings table details .form-item {
   margin-bottom: 8px;
+}
+/* line 9, ../sass/geofield_map_settings.scss */
+form.geofield-map-settings table th, form.geofield-map-settings table td {
+  padding: 0 12px;
+}
+/* line 12, ../sass/geofield_map_settings.scss */
+form.geofield-map-settings table tr td:first-child {
+  white-space: nowrap;
 }

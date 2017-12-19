@@ -64,7 +64,7 @@ class GeofieldMap extends GeofieldElementBase {
     $config = \Drupal::configFactory();
     $geofield_map_settings = $config->get('geofield_map.settings');
 
-    /* @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder_service */
+    /* @var \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder_service */
     $geofield_map_geocoder_service = \Drupal::service('geofield_map.geocoder');
 
     // Conditionally use the Leaflet library from the D8 Module, if enabled.

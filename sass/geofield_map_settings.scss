@@ -2,7 +2,15 @@ form.geofield-map-settings {
   .tabledrag-toggle-weight-wrapper {
     display: none;
   }
-  details .form-item {
-    margin-bottom: 8px;
+  table {
+    details .form-item {
+      margin-bottom: 8px;
+    }
+    th, td {
+      padding: 0 12px;
+    }
+    tr td:first-child {
+      white-space: nowrap;
+    }
   }
 }

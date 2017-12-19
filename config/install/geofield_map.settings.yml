@@ -3,6 +3,7 @@ geocoder:
   min_terms: 4
   delay: 800
   debug_message: '1'
+  formatter: 'geofieldmap_default_formatter'
   plugins:
     - googlemaps
   options: '{"googlemaps":{"apiKey":""}}'

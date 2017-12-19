@@ -5,9 +5,9 @@ namespace Drupal\geofield_map\Services;
 use Drupal\Component\Serialization\Json;
 
 /**
- * Class GeocoderGoogleMapsService.
+ * Class GeocoderServiceGoogleMaps.
  */
-class GeocoderGoogleMapsService extends GeocoderServiceAbstract {
+class GeocoderServiceGoogleMaps extends GeocoderServiceAbstract {
 
   /**
    * Add additional url options to the request.

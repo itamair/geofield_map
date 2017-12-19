@@ -6,7 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
+use Drupal\geofield_map\Services\GeocoderServiceInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Cache\CacheableJsonResponse;
@@ -29,7 +29,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
   /**
    * Drupal\geofield_map\GeofieldMapGeocoder definition.
    *
-   * @var \Drupal\geofield_map\Services\GeocoderGoogleMapsService
+   * @var \Drupal\geofield_map\Services\GeocoderServiceGoogleMaps
    */
   protected $geocoder;
 
@@ -54,10 +54,10 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
    *   The config factory.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The modules handler.
-   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
    *   The Geofield Map Geocoder service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, GeofieldMapGeocoderServiceInterface $geofield_map_geocoder) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandlerInterface $module_handler, GeocoderServiceInterface $geofield_map_geocoder) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->geocoder = $geofield_map_geocoder;

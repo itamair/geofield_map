@@ -19,7 +19,7 @@ use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\geofield\GeoPHP\GeoPHPInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
+use Drupal\geofield_map\Services\GeocoderServiceInterface;
 
 /**
  * Style plugin to render a View output as a Leaflet map.
@@ -131,7 +131,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   /**
    * The Geofield Map Geocoder service.
    *
-   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
+   * @var \Drupal\geofield_map\Services\GeocoderServiceInterface
    */
   protected $geofieldMapGeocoder;
 
@@ -160,7 +160,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    *   The The GeoPHPWrapper.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   Current user service.
-   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+   * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
    *   The Geofield Map Geocoder service.
    */
   public function __construct(
@@ -175,7 +175,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     LinkGeneratorInterface $link_generator,
     GeoPHPInterface $geophp_wrapper,
     AccountInterface $current_user,
-    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+    GeocoderServiceInterface $geofield_map_geocoder
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 

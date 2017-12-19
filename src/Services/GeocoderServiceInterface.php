@@ -3,9 +3,9 @@
 namespace Drupal\geofield_map\Services;
 
 /**
- * Interface GeofieldMapGeocoderServiceInterface.
+ * Interface GeocoderServiceInterface.
  */
-interface GeofieldMapGeocoderServiceInterface {
+interface GeocoderServiceInterface {
 
   /**
    * Geocode with Google Maps or Geocoder Module functionalities.

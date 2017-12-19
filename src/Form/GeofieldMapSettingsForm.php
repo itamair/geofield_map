@@ -7,13 +7,16 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Component\Render\FormattableMarkup;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Utility\LinkGeneratorInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderPluginManagerInterface;
+use Drupal\geofield_map\Services\GeocoderServiceInterface;
+use Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager;
 
 /**
  * Implements the GeofieldMapSettingsForm controller.
@@ -46,11 +49,25 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
   protected $languageManager;
 
   /**
+   * The provider plugin manager service.
+   *
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderPluginManagerInterface
+   */
+  protected $geocoderPluginManager;
+
+  /**
    * The Geofield Map Geocoder service.
    *
-   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface
+   * @var \Drupal\geofield_map\Services\GeocoderServiceInterface
    */
   protected $geofieldMapGeocoder;
+
+  /**
+   * The Geofield Map dumper plugin manager service.
+   *
+   * @var \Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager
+   */
+  protected $geofieldMapDumperPluginManager;
 
   /**
    * GeofieldMapSettingsForm constructor.
@@ -63,33 +80,44 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    *   The module handler.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
    *   The language manager.
-   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
-   *   The Geofield Map Geocoder service.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderPluginManagerInterface $geocoder_plugin_manager
+   *   The provider plugin manager service.
+   * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
+   *   The geofield map geocoder service.
+   * @param \Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager $geofield_map_dumper_plugin_manager
+   *   The geofield map dumper service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
     LinkGeneratorInterface $link_generator,
     ModuleHandlerInterface $module_handler,
     LanguageManagerInterface $language_manager,
-    GeofieldMapGeocoderServiceInterface $geofield_map_geocoder
+    GeofieldMapGeocoderPluginManagerInterface $geocoder_plugin_manager,
+    GeocoderServiceInterface $geofield_map_geocoder,
+    GeofieldMapGeocoderDumperPluginManagerInterface $geofield_map_dumper_plugin_manager
   ) {
     parent::__construct($config_factory);
     $this->link = $link_generator;
     $this->moduleHandler = $module_handler;
     $this->languageManager = $language_manager;
+    $this->geocoderPluginManager = $geocoder_plugin_manager;
     $this->geofieldMapGeocoder = $geofield_map_geocoder;
+    $this->geofieldMapDumperPluginManager = $geofield_map_dumper_plugin_manager;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
+
     return new static(
       $container->get('config.factory'),
       $container->get('link_generator'),
       $container->get('module_handler'),
       $container->get('language_manager'),
-      $container->get('geofield_map.geocoder')
+      $container->get('geofield_map.geocoder_plugin_manager_provider'),
+      $container->get('geofield_map.geocoder'),
+      $container->get('plugin.manager.geofield_map.dumper')
     );
   }
 
@@ -100,6 +128,16 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $config = $this->configFactory->get('geofield_map.settings');
 
     $language_id = $this->languageManager->getCurrentLanguage()->getId();
+    $geocoder_module_link = $this->link->generate(t('Geocoder Module'), Url::fromUri('https://www.drupal.org/project/geocoder', [
+      'absolute' => TRUE,
+      'attributes' => ['target' => 'blank'],
+    ]));
+
+
+    $geocoder_php_library_link = $this->link->generate(t('Geocoder Php Library'), Url::fromUri('http://geocoder-php.org/Geocoder/#formatters', [
+      'absolute' => TRUE,
+      'attributes' => ['target' => 'blank'],
+    ]));
 
     $form['#tree'] = TRUE;
 
@@ -119,6 +157,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Geofield Map Geocoder Settings'),
     ];
+
     $form['geocoder']['debug_message'] = [
       '#type' => 'checkbox',
       '#default_value' => $config->get('geocoder.debug_message'),
@@ -149,17 +188,58 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $options_field_description = $this->t('An object literal of Geocoder options. The syntax should respect the javascript object notation (json) format. As suggested in the field placeholder, always use double quotes (") both for the indexes and the string values.');
     $options_field_placeholder = '{"locale":"' . $language_id . '", "key_2": "value_2", "key_n": "value_n"}';
 
-    $geocoder_module_link = $this->link->generate(t('Geocoder Module'), Url::fromUri('https://www.drupal.org/project/geocoder', [
-      'absolute' => TRUE,
-      'attributes' => ['target' => 'blank'],
-    ]));
+    $form['geocoder']['integration_message'] = [
+      '#type' => 'html_tag',
+      '#tag' => 'div',
+      '#value' => $this->t('<strong>The Geocoder Module integration is not enabled.</strong>'),
+    ];
+
+    if ($this->moduleHandler->moduleExists('geocoder')) {
+      $form['geocoder']['integration_message']['#value'] = $this->t('<span class="geofield-map-success">The @geocoder_module_link integration is enabled.</span>', [
+        '@geocoder_module_link' => $geocoder_module_link,
+      ]);
+    }
 
     // If the Geocoder Module exists extend the Form with Geocoders Elements.
     if ($this->moduleHandler->moduleExists('geocoder')) {
+
+      $geocoder_formatter_options = $this->geofieldMapDumperPluginManager->getPluginsAsOptions();
+
+      $form['geocoder']['formatter'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Geocoder Formatter'),
+        '#options' => $geocoder_formatter_options,
+        '#default_value' => $config->get('geocoder.formatter') ? $config->get('geocoder.formatter') : 'default_formatter',
+        '#description' => [
+          '#type' => 'container',
+          'description_base' => [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#value' => $this->t('This defines the way a Geocoded/Reversegeocoded Address will be formatted, according to the @geocoder_php_library_link Formatters APIs.', [
+              '@geocoder_php_library_link' => $geocoder_php_library_link,
+            ]),
+          ],
+          'description_add' => [
+            '#type' => 'html_tag',
+            '#tag' => 'div',
+            '#value' => $this->t('You can add your custom Geofield Map Geocoder Formatter duplicating (personalizing or overriding) the default src/Plugin/GeofieldMap/Dumper/GeofieldMapFormattedAddress in your "@geofield_map_formatter_folder" folder.', [
+              '@geofield_map_formatter_folder' => '[your_module_name]/src/Plugin/GeofieldMap/Dumper/',
+            ]),
+          ],
+        ],
+      ];
+
+      if (count($geocoder_formatter_options) < 2) {
+        $form['geocoder']['formatter']['#disabled'] = TRUE;
+      }
+
+      /* @var \Drupal\geocoder\ProviderPluginManager $geocoder_provider_plugin_manager */
+      $geocoder_provider_plugin_manager = $this->geocoderPluginManager->getGeocoderProviderPluginManager();
+
       // Get the default/selected geocoder plugins.
       $default_plugins = !empty($config->get('geocoder.plugins')) ? $config->get('geocoder.plugins') : [];
-      $geocoders = \Drupal::service('plugin.manager.geocoder.provider')->getPluginsAsOptions();
-      $geocoders_table_caption = $this->t('<span class="geofield-map-success">The @geocoder_module_link integration is enabled.</span><br>Select the Geocoder plugins to use. Reorder them in order of priority. The first one able to return a valid value will be used.</br>Add the optional or mandatory options for each Geocoder to make them working properly. Refer to Geocoder Module (and its dependency PHP libraries) for further documentation and specific Geocoders settings.', [
+      $geocoders = $geocoder_provider_plugin_manager->getPluginsAsOptions();
+      $geocoders_table_caption = $this->t('Select the Geocoder plugins to use. Reorder them in order of priority. The first one able to return a valid value will be used.</br>Add the optional or mandatory options for each Geocoder to make them working properly. Refer to Geocoder Module (and its dependency PHP libraries) for further documentation and specific Geocoders settings.', [
         '@geocoder_module_link' => $geocoder_module_link,
       ]);
 
@@ -185,7 +265,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       $geocoders = ['googlemaps' => 'Google Maps'];
       // Get the default/selected geocoder plugins.
       $default_plugins = ['googlemaps'];
-      $geocoders_table_caption = $this->t('<strong>The Geocoder Module integration is not enabled.</strong><br>The Google Maps Geocoder is being used as default one. Add and enable the @geocoder_module_link to take advantage of many more Geocoders and its functionalities integration.', [
+      $geocoders_table_caption = $this->t('The Google Maps Geocoder is being used as default one. Add and enable the @geocoder_module_link to take advantage of many more Geocoders and its functionalities integration.', [
         '@geocoder_module_link' => $geocoder_module_link,
       ]);
 

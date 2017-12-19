@@ -1,4 +1,12 @@
 services:
   geofield_map.geocoder:
-    class: Drupal\geofield_map\Services\GeocoderGoogleMapsService
+    class: Drupal\geofield_map\Services\GeocoderServiceGoogleMaps
     arguments: ['@config.factory', '@http_client', '@current_user', '@module_handler', '@link_generator', '@string_translation']
+
+  plugin.manager.geofield_map.dumper:
+    class: Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager
+    parent: default_plugin_manager
+
+  geofield_map.geocoder_plugin_manager_provider:
+    class: Drupal\geofield_map\Services\GeofieldMapGeocoderPluginManagerNull
+    arguments: ['@module_handler']

@@ -12,9 +12,9 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 
 /**
- * Class GeocoderGoogleMaps.
+ * Class GeocoderServiceAbstract.
  */
-abstract class GeocoderServiceAbstract implements GeofieldMapGeocoderServiceInterface {
+abstract class GeocoderServiceAbstract implements GeocoderServiceInterface {
 
   use StringTranslationTrait;
 

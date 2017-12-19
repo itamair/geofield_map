@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\geofield_map\Plugin\Geocoder\Dumper;
+namespace Drupal\geofield_map\Plugin\GeofieldMap\Dumper;
 
 use Drupal\geocoder\DumperBase;
 use Geocoder\Model\Address;
@@ -8,9 +8,9 @@ use Geocoder\Model\Address;
 /**
  * Provides a formatted address string geocoder dumper plugin.
  *
- * @GeocoderDumper(
- *   id = "geofieldmap_formattedaddress",
- *   name = "GeofieldMap Formatted Address string"
+ * @GeofieldMapDumper(
+ *   id = "geofieldmap_default_formatter",
+ *   name = "GeofieldMap Default Formatter"
  * )
  */
 class GeofieldMapFormattedAddress extends DumperBase {
@@ -32,8 +32,8 @@ class GeofieldMapFormattedAddress extends DumperBase {
     $formatted_address .= !empty($values['postalCode']) ? $values['postalCode'] . ' ' : '';
     $formatted_address .= !empty($values['subLocality']) && !empty($values['locality']) ? $values['subLocality'] . ' - ' . $values['locality'] . ' ' : '';
     $formatted_address .= empty($values['subLocality']) && !empty($values['locality']) ? $values['locality'] . ' ' : '';
-    $formatted_address .= !empty($values['countryCode']) ? $values['countryCode'] . ', ' : '';
-    $formatted_address .= !empty($values['country']) ? $values['country'] : '';
+    $formatted_address .= !empty($values['countryCode']) ? $values['countryCode'] : '';
+    $formatted_address .= !empty($values['country']) ? ', ' . $values['country'] : '';
 
     return $formatted_address;
   }

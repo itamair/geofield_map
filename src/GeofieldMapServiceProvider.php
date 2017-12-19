@@ -18,12 +18,21 @@ class GeofieldMapServiceProvider extends ServiceProviderBase {
     $modules = $container->getParameter('container.modules');
     // Check for installed Geocoder Module.
     if (isset($modules['geocoder'])) {
-      $definition = $container->getDefinition('geofield_map.geocoder');
-      $definition->setClass('Drupal\geofield_map\Services\GeocoderGeocoderService')
+      $geocoder_definition = $container->getDefinition('geofield_map.geocoder');
+      $geocoder_definition->setClass('Drupal\geofield_map\Services\GeocoderServiceGeocoder')
         ->addArgument(new Reference('geocoder'))
         ->addArgument(new Reference('plugin.manager.geocoder.dumper'))
+        ->addArgument(new Reference('plugin.manager.geocoder.provider'))
+        ->addArgument(new Reference('plugin.manager.geofield_map.dumper'));
+
+      $geocoder_dumper_plugin_manager_definition = $container->getDefinition('plugin.manager.geofield_map.dumper');
+      $geocoder_dumper_plugin_manager_definition->setClass('Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager');
+
+      $geocoder_plugin_manager_provider_definition = $container->getDefinition('geofield_map.geocoder_plugin_manager_provider');
+      $geocoder_plugin_manager_provider_definition->setClass('Drupal\geofield_map\Services\GeofieldMapGeocoderPluginManager')
         ->addArgument(new Reference('plugin.manager.geocoder.provider'));
     }
+
   }
 
 }
