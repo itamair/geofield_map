@@ -3,10 +3,10 @@ services:
     class: Drupal\geofield_map\Services\GeocoderServiceGoogleMaps
     arguments: ['@config.factory', '@http_client', '@current_user', '@module_handler', '@link_generator', '@string_translation']
 
-  plugin.manager.geofield_map.dumper:
-    class: Drupal\geofield_map\Services\GeofieldMapGeocoderDumperPluginManager
+  plugin.manager.geofield_map.formatter:
+    class: Drupal\geofield_map\Services\GeocoderFormatterPluginManager
     parent: default_plugin_manager
 
   geofield_map.geocoder_plugin_manager_provider:
-    class: Drupal\geofield_map\Services\GeofieldMapGeocoderPluginManagerNull
+    class: Drupal\geofield_map\Services\GeocoderPluginManagerNull
     arguments: ['@module_handler']

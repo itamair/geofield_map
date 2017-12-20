@@ -5,11 +5,11 @@ namespace Drupal\geofield_map\Annotation;
 use Drupal\geocoder\Annotation\GeocoderPluginBase;
 
 /**
- * Defines a geofield map dumper plugin annotation object.
+ * Defines a geofield map formatter plugin annotation object.
  *
  * @Annotation
  */
-class GeofieldMapDumper extends GeocoderPluginBase {
+class GeofieldMapFormatter extends GeocoderPluginBase {
 
   /**
    * The plugin handler.

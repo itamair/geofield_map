@@ -253,6 +253,13 @@ abstract class GeocoderServiceAbstract implements GeocoderServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getGeofieldMapFormatter() {
+    return $this->config->get('geofield_map.settings')->get('geocoder.formatter') ? $this->config->get('geofield_map.settings')->get('geocoder.formatter') : 'default_address_formatter';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function widgetElementDescription() {
     return $this->t('Use this to search and geocode your location (type at least @min_terms terms)', [
       '@min_terms' => $this->config->get('geofield_map.settings')->get('geocoder.min_terms'),

@@ -5,7 +5,7 @@ namespace Drupal\geofield_map\Services;
 /**
  * Interface GeocoderPluginManagerInterface.
  */
-interface GeofieldMapGeocoderPluginManagerInterface {
+interface GeocoderPluginManagerInterface {
 
   /**
    * Return Null or geocoder\ProviderPluginManager if geocoder module exists.

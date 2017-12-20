@@ -42,6 +42,14 @@ interface GeocoderServiceInterface {
   public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []);
 
   /**
+   * Get the Selected Geofield Map Formatter.
+   *
+   * @return string
+   *   The Geofield Map Formatter machine name.
+   */
+  public function getGeofieldMapFormatter();
+
+  /**
    * Output a Geocoder Setup Message in the Geofield Map Widget Setup.
    *
    * @return array
