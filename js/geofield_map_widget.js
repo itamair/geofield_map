@@ -200,25 +200,26 @@
       var plugins = self.get_geocoder_plugins(mapid);
       var pluginsOptionsString = self.get_geocoder_plugins_options(mapid);
       var latlng = self.getLatLngUrlValue(mapid, position);
-      self.map_data[mapid].search.addClass('ui-autocomplete-loading');
-      $.ajax({
-        url: Drupal.url('geofield_map/reverse_geocode?' +
-          // @todo get dynamic geocoder plugin
-          'plugins=' + plugins +
-          '&latlng=' +  encodeURIComponent(latlng)),
-        type:"POST",
-        contentType:"application/json; charset=utf-8",
-        dataType: "json",
-        data: pluginsOptionsString
-      }).done(function(data, textStatus, jqXHR) {
-        var results = data['results'];
-        var formatted_address = results.length > 0 && results[0].formatted_address ? results[0].formatted_address : '';
-        if (self.map_data[mapid].search) {
-          self.map_data[mapid].search.val(formatted_address);
-          self.map_data[mapid].search.removeClass('ui-autocomplete-loading');
-          self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
-        }
-      });
+      if (latlng !== "0,0") {
+        self.map_data[mapid].search.addClass('ui-autocomplete-loading');
+        $.ajax({
+          url: Drupal.url('geofield_map/reverse_geocode?' +
+            'plugins=' + plugins +
+            '&latlng=' + encodeURIComponent(latlng)),
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          dataType: "json",
+          data: pluginsOptionsString
+        }).done(function (data, textStatus, jqXHR) {
+          var results = data['results'];
+          var formatted_address = results.length > 0 && results[0].formatted_address ? results[0].formatted_address : '';
+          if (self.map_data[mapid].search) {
+            self.map_data[mapid].search.val(formatted_address);
+            self.map_data[mapid].search.removeClass('ui-autocomplete-loading');
+            self.setGeoaddressField(mapid, self.map_data[mapid].search.val());
+          }
+        });
+      }
     },
 
     // Triggers the Geocode on the Geofield Map Widget
