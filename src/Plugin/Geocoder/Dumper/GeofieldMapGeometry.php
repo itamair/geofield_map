@@ -17,6 +17,9 @@ class GeofieldMapGeometry extends DumperBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @return string
+   *   The formatted address.
    */
   public function dump(Address $address) {
     $values = [];
@@ -26,6 +29,7 @@ class GeofieldMapGeometry extends DumperBase {
       }
     }
 
+    /* @var array $geometry */
     $geometry = [
       'location' => [
         'lat' => $address->toArray()['latitude'],
