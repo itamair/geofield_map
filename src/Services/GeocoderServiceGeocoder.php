@@ -11,6 +11,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\geocoder\GeocoderInterface;
 use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\DumperPluginManager;
+use Geocoder\Model\Address;
 
 /**
  * Class GeocoderServiceGeocoder.
@@ -70,6 +71,37 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
       }
     };
     return implode(", ", $geocoders);
+  }
+
+  /**
+   * Add a geometry property is not defined (as Google Maps Geocoding does).
+
+   * @param \Geocoder\Model\Address $address
+   *   The Address array.
+   *
+   * @return array
+   *   The Address Geometry Property.
+   */
+  protected function addGeometryProperty(Address $address) {
+    /* @var array $address_array */
+    $address_array = $address->toArray();
+
+    return [
+      'location' => [
+        'lat' => $address_array['latitude'],
+        'lng' => $address_array['longitude'],
+      ],
+      'viewport' => [
+        'northeast' => [
+          'lat' => $address_array['bounds']['north'],
+          'lng' => $address_array['bounds']['east'],
+        ],
+        'southwest' => [
+          'lat' => $address_array['bounds']['south'],
+          'lng' => $address_array['bounds']['west'],
+        ],
+      ],
+    ];
   }
 
   /**
@@ -149,18 +181,17 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
       /* @var \Geocoder\Model\Address $geo_address */
       foreach ($addresses_collection as $geo_address) {
         $geo_address_array = $geo_address->toArray();
-        // It a formatted_address property is not defined
+        // If a formatted_address property is not defined
         // (as Google Maps Geocoding does), then create it with our own dumper.
         if (!isset($geo_address_array['formatted_address'])) {
 
           $geo_address_array['formatted_address'] = $this->geofieldMapFormatterPluginManager->createInstance($this->getGeofieldMapFormatter())
             ->format($geo_address);
         }
-        // It a formatted_address property is not defined
+        // If a geometry property is not defined
         // (as Google Maps Geocoding does), then create it with our own dumper.
         if (!isset($geo_address_array['geometry'])) {
-          $geo_address_array['geometry'] = $this->dumperPluginManager->createInstance('geofieldmap_geometry')
-            ->dump($geo_address);
+          $geo_address_array['geometry'] = $this->addGeometryProperty($geo_address);
         }
         $data['results'][] = $geo_address_array;
       }
@@ -181,22 +212,23 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
       'results' => [],
     ];
 
-    /* @var \Geocoder\Model\AddressCollection $geo_address */
-    $geo_address = $this->geocoder->reverse($lat, $lng, $plugins, $plugin_options);
+    /* @var \Geocoder\Model\AddressCollection $addresses_collection */
+    $addresses_collection = $this->geocoder->reverse($lat, $lng, $plugins, $plugin_options);
 
-    if ($geo_address) {
-      $geo_address_array = $geo_address->first()->toArray();
-      // It a formatted_address property is not defined
+    if (!empty($addresses_collection)) {
+      /* @var \Geocoder\Model\Address $geo_address */
+      $geo_address = $addresses_collection->first();
+      $geo_address_array = $geo_address->toArray();
+      // If a formatted_address property is not defined
       // (as Google Maps Geocoding does), then create it with our own dumper.
       if (!isset($geo_address_array['formatted_address'])) {
         $geo_address_array['formatted_address'] = $this->geofieldMapFormatterPluginManager->createInstance($this->getGeofieldMapFormatter())
-          ->format($geo_address->first());
+          ->format($geo_address);
       }
-      // It a formatted_address property is not defined
+      // If a geometry property is not defined
       // (as Google Maps Geocoding does), then create it with our own dumper.
       if (!isset($geo_address_array['geometry'])) {
-        $geo_address_array['geometry'] = $this->dumperPluginManager->createInstance('geofieldmap_geometry')
-          ->dump($geo_address->first());
+        $geo_address_array['geometry'] = $this->addGeometryProperty($geo_address);
       }
       $data['results'][] = $geo_address_array;
     }
