@@ -85,11 +85,11 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
   protected $entityFieldManager;
 
   /**
-   * The GeoPHPWrapper service.
+   * The geoPhpWrapper service.
    *
    * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
    */
-  protected $geoPHPWrapper;
+  protected $geoPhpWrapper;
 
   /**
    * The Geofield Map Geocoder service.
@@ -128,9 +128,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
-   *   The The GeoPHPWrapper.
-   * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
-   *   The Geofield Map Geocoder service.
+   *   The The geoPhpWrapper.
    */
   public function __construct(
     $plugin_id,
@@ -155,7 +153,7 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
     $this->entityTypeManager = $entity_type_manager;
     $this->entityDisplayRepository = $entity_display_repository;
     $this->entityFieldManager = $entity_field_manager;
-    $this->geoPHPWrapper = $geophp_wrapper;
+    $this->geoPhpWrapper = $geophp_wrapper;
     $this->geofieldMapGeocoder = $geofield_map_geocoder;
   }
 

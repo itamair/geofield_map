@@ -115,11 +115,11 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   protected $link;
 
   /**
-   * The GeoPHPWrapper service.
+   * The geoPhpWrapper service.
    *
    * @var \Drupal\geofield\GeoPHP\GeoPHPInterface
    */
-  protected $geoPHPWrapper;
+  protected $geoPhpWrapper;
 
   /**
    * Current user service.
@@ -157,7 +157,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
    * @param \Drupal\Core\Utility\LinkGeneratorInterface $link_generator
    *   The Link Generator service.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
-   *   The The GeoPHPWrapper.
+   *   The The geoPhpWrapper.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   Current user service.
    * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
@@ -185,7 +185,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
     $this->config = $config_factory;
     $this->renderer = $renderer;
     $this->link = $link_generator;
-    $this->geoPHPWrapper = $geophp_wrapper;
+    $this->geoPhpWrapper = $geophp_wrapper;
     $this->currentUser = $current_user;
     $this->geofieldMapGeocoder = $geofield_map_geocoder;
   }
@@ -211,7 +211,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   }
 
   /**
-   * If this view is displaying an entity, save the entity type and info.
+   * {@inheritdoc}
    */
   public function init(ViewExecutable $view, DisplayPluginBase $display, array &$options = NULL) {
     parent::init($view, $display, $options);
@@ -237,7 +237,7 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
   }
 
   /**
-   * Options form.
+   * {@inheritdoc}
    */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
@@ -396,12 +396,19 @@ class GeofieldGoogleMapViewStyle extends DefaultStyle implements ContainerFactor
           // Normal rendering via fields.
           elseif ($description_field) {
             $description_field_name = strtolower($map_settings['map_marker_and_infowindow']['infowindow_field']);
-            foreach ($entity->$description_field_name->getValue() as $value) {
-              if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
-                $description[] = $this->rendered_fields[$id][$description_field];
-                break;
+            if ($entity->$description_field_name) {
+              // Check if the entity has a $description_field_name field.
+              foreach ($entity->$description_field_name->getValue() as $value) {
+                if ($map_settings['map_marker_and_infowindow']['multivalue_split'] == FALSE) {
+                  $description[] = $this->rendered_fields[$id][$description_field];
+                  break;
+                }
+                $description[] = $value['value'];
               }
-              $description[] = $value['value'];
+            }
+            // Else get the views field value.
+            else {
+              $description[] = $this->rendered_fields[$id][$description_field];
             }
           }
 
