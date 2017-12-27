@@ -12,6 +12,7 @@ use Drupal\geocoder\GeocoderInterface;
 use Drupal\geocoder\ProviderPluginManager;
 use Drupal\geocoder\DumperPluginManager;
 use Geocoder\Model\Address;
+use Drupal\geocoder\FormatterPluginManager;
 
 /**
  * Class GeocoderServiceGeocoder.
@@ -48,11 +49,11 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
   protected $providerPluginManager;
 
   /**
-   * The Geofield Map formatter plugin manager service.
+   * The Geocoder formatter plugin manager service.
    *
-   * @var \Drupal\geofield_map\Services\GeocoderFormatterPluginManager
+   * @var \Drupal\geocoder\FormatterPluginManager
    */
-  protected $geofieldMapFormatterPluginManager;
+  protected $geocoderFormatterPluginManager;
 
   /**
    * Get the list of Geocoders Plugins.
@@ -74,8 +75,8 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
   }
 
   /**
-   * Add a geometry property is not defined (as Google Maps Geocoding does).
-
+   * Add a geometry property if not defined (as Google Maps Geocoding does).
+   *
    * @param \Geocoder\Model\Address $address
    *   The Address array.
    *
@@ -125,7 +126,7 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
    *   The geocoder dumper service.
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
    *   The geocoders manager service.
-   * @param \Drupal\geofield_map\Services\GeocoderFormatterPluginManager $geofield_map_dumper_plugin_manager
+   * @param \Drupal\geocoder\FormatterPluginManager $geocoder_formatter_plugin_manager
    *   The geofield map formatter service.
    */
   public function __construct(
@@ -138,12 +139,12 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
     GeocoderInterface $geocoder,
     DumperPluginManager $dumper_plugin_manager,
     ProviderPluginManager $provider_plugin_manager,
-    GeocoderFormatterPluginManager $geofield_map_dumper_plugin_manager
+    FormatterPluginManager $geocoder_formatter_plugin_manager
   ) {
     $this->geocoder = $geocoder;
     $this->dumperPluginManager = $dumper_plugin_manager;
     $this->providerPluginManager = $provider_plugin_manager;
-    $this->geofieldMapFormatterPluginManager = $geofield_map_dumper_plugin_manager;
+    $this->geocoderFormatterPluginManager = $geocoder_formatter_plugin_manager;
     parent::__construct($config_factory, $http_client, $current_user, $module_handler, $link_generator, $string_translation);
   }
 
@@ -181,11 +182,11 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
       /* @var \Geocoder\Model\Address $geo_address */
       foreach ($addresses_collection as $geo_address) {
         $geo_address_array = $geo_address->toArray();
-        // If a formatted_address property is not defined
-        // (as Google Maps Geocoding does), then create it with our own dumper.
+        // If a formatted_address property is not defined (as Google Maps
+        // Geocoding does), then create it with our own formatter.
         if (!isset($geo_address_array['formatted_address'])) {
 
-          $geo_address_array['formatted_address'] = $this->geofieldMapFormatterPluginManager->createInstance($this->getGeofieldMapFormatter())
+          $geo_address_array['formatted_address'] = $this->geocoderFormatterPluginManager->createInstance($this->getGeofieldMapFormatter())
             ->format($geo_address);
         }
         // If a geometry property is not defined
@@ -219,10 +220,10 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
       /* @var \Geocoder\Model\Address $geo_address */
       $geo_address = $addresses_collection->first();
       $geo_address_array = $geo_address->toArray();
-      // If a formatted_address property is not defined
-      // (as Google Maps Geocoding does), then create it with our own dumper.
+      // If a formatted_address property is not defined (as Google Maps
+      // Geocoding does), then create it with our own formatter.
       if (!isset($geo_address_array['formatted_address'])) {
-        $geo_address_array['formatted_address'] = $this->geofieldMapFormatterPluginManager->createInstance($this->getGeofieldMapFormatter())
+        $geo_address_array['formatted_address'] = $this->geocoderFormatterPluginManager->createInstance($this->getGeofieldMapFormatter())
           ->format($geo_address);
       }
       // If a geometry property is not defined

@@ -5,7 +5,7 @@ namespace Drupal\geofield_map\Plugin\GeofieldMap\Formatter;
 use Geocoder\Model\Address;
 
 /**
- * Provides an interface for geocoder dumper plugins.
+ * Provides an interface for geofield_map formatter plugins.
  *
  * Dumpers are plugins that knows to format geographical data into an industry
  * standard format.

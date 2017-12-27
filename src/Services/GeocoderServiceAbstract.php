@@ -254,7 +254,7 @@ abstract class GeocoderServiceAbstract implements GeocoderServiceInterface {
    * {@inheritdoc}
    */
   public function getGeofieldMapFormatter() {
-    return $this->config->get('geofield_map.settings')->get('geocoder.formatter') ? $this->config->get('geofield_map.settings')->get('geocoder.formatter') : 'default_address_formatter';
+    return $this->config->get('geofield_map.settings')->get('geocoder.formatter') ? $this->config->get('geofield_map.settings')->get('geocoder.formatter') : 'default_geocoder_address_formatter';
   }
 
   /**

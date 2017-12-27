@@ -20,7 +20,7 @@ geofield_map.settings:
           label: 'The option to enable the Geocoder Debug Message for the Geofield Map Manager in the Map Widget Element'
         formatter:
           type: string
-          label: 'The Geocoded Address Formatter Plugin'
+          label: 'The default Geocoder Address Formatter'
         plugins:
           type: sequence
           label: 'The enabled Geocoder Plugins'

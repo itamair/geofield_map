@@ -23,7 +23,7 @@ class GeofieldMapServiceProvider extends ServiceProviderBase {
         ->addArgument(new Reference('geocoder'))
         ->addArgument(new Reference('plugin.manager.geocoder.dumper'))
         ->addArgument(new Reference('plugin.manager.geocoder.provider'))
-        ->addArgument(new Reference('plugin.manager.geofield_map.formatter'));
+        ->addArgument(new Reference('plugin.manager.geocoder.formatter'));
 
       $geocoder_plugin_manager_provider_definition = $container->getDefinition('geofield_map.geocoder_plugin_manager_provider');
       $geocoder_plugin_manager_provider_definition->setClass('Drupal\geofield_map\Services\GeocoderPluginManager')

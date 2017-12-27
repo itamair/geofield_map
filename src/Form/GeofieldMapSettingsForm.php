@@ -7,7 +7,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\geofield_map\Services\GeocoderFormatterPluginManager;
+use Drupal\geocoder\FormatterPluginManager;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 use Drupal\Component\Serialization\Json;
@@ -62,11 +62,11 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
   protected $geofieldMapGeocoder;
 
   /**
-   * The Geofield Map dumper plugin manager service.
+   * The Geocoder Formatter plugin manager service.
    *
-   * @var \Drupal\geofield_map\Services\GeocoderFormatterPluginManager
+   * @var \Drupal\geocoder\FormatterPluginManager
    */
-  protected $geofieldMapDumperPluginManager;
+  protected $geocoderFormatterPluginManager;
 
   /**
    * GeofieldMapSettingsForm constructor.
@@ -83,7 +83,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
    *   The provider plugin manager service.
    * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
    *   The geofield map geocoder service.
-   * @param \Drupal\geofield_map\Services\GeocoderFormatterPluginManager $geofield_map_dumper_plugin_manager
+   * @param \Drupal\geocoder\FormatterPluginManager $geocoder_formatter_plugin_manager
    *   The geofield map dumper service.
    */
   public function __construct(
@@ -93,7 +93,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     LanguageManagerInterface $language_manager,
     GeocoderPluginManagerInterface $geocoder_plugin_manager,
     GeocoderServiceInterface $geofield_map_geocoder,
-    GeocoderFormatterPluginManager $geofield_map_dumper_plugin_manager
+    FormatterPluginManager $geocoder_formatter_plugin_manager
   ) {
     parent::__construct($config_factory);
     $this->link = $link_generator;
@@ -101,7 +101,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     $this->languageManager = $language_manager;
     $this->geocoderPluginManager = $geocoder_plugin_manager;
     $this->geofieldMapGeocoder = $geofield_map_geocoder;
-    $this->geofieldMapDumperPluginManager = $geofield_map_dumper_plugin_manager;
+    $this->geocoderFormatterPluginManager = $geocoder_formatter_plugin_manager;
   }
 
   /**
@@ -116,7 +116,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       $container->get('language_manager'),
       $container->get('geofield_map.geocoder_plugin_manager_provider'),
       $container->get('geofield_map.geocoder'),
-      $container->get('plugin.manager.geofield_map.formatter')
+      $container->get('plugin.manager.geocoder.formatter')
     );
   }
 
@@ -201,7 +201,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     // If the Geocoder Module exists extend the Form with Geocoders Elements.
     if ($this->moduleHandler->moduleExists('geocoder')) {
 
-      $geocoder_formatter_options = $this->geofieldMapDumperPluginManager->getPluginsAsOptions();
+      $geocoder_formatter_options = $this->geocoderFormatterPluginManager->getPluginsAsOptions();
 
       $form['geocoder']['formatter'] = [
         '#type' => 'select',
