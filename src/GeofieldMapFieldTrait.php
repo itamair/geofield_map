@@ -430,6 +430,13 @@ trait GeofieldMapFieldTrait {
 
     $multivalue_fields_states = [];
 
+    $fields_list = array_merge_recursive(
+      $this->entityFieldManager->getFieldMapByFieldType('string_long'),
+      $this->entityFieldManager->getFieldMapByFieldType('string'),
+      $this->entityFieldManager->getFieldMapByFieldType('text'),
+      $this->entityFieldManager->getFieldMapByFieldType('text_long')
+    );
+
     // In case it is a Field Formatter.
     if (isset($entity_type)) {
       $desc_options = [
@@ -437,16 +444,8 @@ trait GeofieldMapFieldTrait {
         'title' => $this->t('- Title -'),
       ];
 
-
       // Get the Cardinality set for the Formatter Field.
       $field_cardinality = $this->fieldDefinition->getFieldStorageDefinition()->getCardinality();
-
-      $fields_list = array_merge_recursive(
-        $this->entityFieldManager->getFieldMapByFieldType('string_long'),
-        $this->entityFieldManager->getFieldMapByFieldType('string'),
-        $this->entityFieldManager->getFieldMapByFieldType('text'),
-        $this->entityFieldManager->getFieldMapByFieldType('text_long')
-      );
 
       foreach ($fields_list[$entity_type] as $k => $field) {
         if (isset($bundles) && !empty(array_intersect($field['bundles'], $bundles)) &&
@@ -459,7 +458,7 @@ trait GeofieldMapFieldTrait {
         }
       }
 
-      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', array('@entity' => $entity_type));
+      $desc_options['#rendered_entity'] = $this->t('- Rendered @entity entity -', ['@entity' => $entity_type]);
 
       $info_window_source_options = $desc_options;
 
@@ -470,9 +469,16 @@ trait GeofieldMapFieldTrait {
 
       foreach ($info_window_source_options as $k => $field) {
         /* @var \\Drupal\Core\Field\BaseFieldDefinition $fields_configurations[$k] */
+
         if (array_key_exists($k, $fields_configurations) && $fields_configurations[$k]->getCardinality() !== 1) {
           $multivalue_fields_states[] = ['value' => $k];
         }
+
+        // Remove the fields options that are not string/text type fields.
+        if (isset($this->entity_type) && substr($k, 0, 5) == 'field' && !array_key_exists($k, $fields_list[$k])) {
+          unset($info_window_source_options[$k]);
+        }
+
       }
 
     }
@@ -481,7 +487,7 @@ trait GeofieldMapFieldTrait {
       $elements['map_marker_and_infowindow']['infowindow_field'] = [
         '#type' => 'select',
         '#title' => $this->t('Marker Infowindow Content from'),
-        '#description' => $this->t('Choose an existing string type field from which populate the Marker Infowindow'),
+        '#description' => $this->t('Choose an existing string/text type field from which populate the Marker Infowindow'),
         '#options' => $info_window_source_options,
         '#default_value' => $settings['map_marker_and_infowindow']['infowindow_field'],
       ];
@@ -514,26 +520,26 @@ trait GeofieldMapFieldTrait {
 
     if (isset($entity_type)) {
       // Get the human readable labels for the entity view modes.
-      $view_mode_options = array();
+      $view_mode_options = [];
       foreach ($this->entityDisplayRepository->getViewModes($entity_type) as $key => $view_mode) {
         $view_mode_options[$key] = $view_mode['label'];
       }
       // The View Mode drop-down is visible conditional on "#rendered_entity"
       // being selected in the Description drop-down above.
-      $elements['map_marker_and_infowindow']['view_mode'] = array(
+      $elements['map_marker_and_infowindow']['view_mode'] = [
         '#type' => 'select',
         '#title' => $this->t('View mode'),
         '#description' => $this->t('View mode the entity will be displayed in the Infowindow.'),
         '#options' => $view_mode_options,
         '#default_value' => !empty($settings['map_marker_and_infowindow']['view_mode']) ? $settings['map_marker_and_infowindow']['view_mode'] : NULL,
-        '#states' => array(
-          'visible' => array(
-            ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => array(
+        '#states' => [
+          'visible' => [
+            ':input[name$="[settings][map_marker_and_infowindow][infowindow_field]"]' => [
               'value' => '#rendered_entity',
-            ),
-          ),
-        ),
-      );
+            ],
+          ],
+        ],
+      ];
     }
 
     if (isset($field_definition)) {
@@ -559,12 +565,12 @@ trait GeofieldMapFieldTrait {
       '#element_validate' => [[get_class($this), 'jsonValidate']],
     ];
 
-    $elements['map_oms'] = array(
+    $elements['map_oms'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Overlapping Markers'),
       '#description' => $this->t('<b>Note: </b>To make this working in conjunction with the Markercluster Option (see below) a "maxZoom" property should be set in the Marker Cluster Additional Options.'),
       '#description_display' => 'before',
-    );
+    ];
     $elements['map_oms']['map_oms_control'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Spiderfy overlapping markers'),
@@ -602,10 +608,10 @@ trait GeofieldMapFieldTrait {
       ];
     }
 
-    $elements['custom_style_map'] = array(
+    $elements['custom_style_map'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Custom Styled Map'),
-    );
+    ];
     $elements['custom_style_map']['custom_style_control'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Create a @custom_google_map_style_link.', [
@@ -676,10 +682,10 @@ trait GeofieldMapFieldTrait {
       ],
     ];
 
-    $elements['map_markercluster'] = array(
+    $elements['map_markercluster'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Marker Clustering'),
-    );
+    ];
     $elements['map_markercluster']['markup'] = [
       '#markup' => $this->t('Enable the functionality of the @markeclusterer_api_link.', [
         '@markeclusterer_api_link' => $this->link->generate($this->t('Marker Clusterer Google Maps JavaScript Library'), Url::fromUri('https://github.com/googlemaps/js-marker-clusterer', [
