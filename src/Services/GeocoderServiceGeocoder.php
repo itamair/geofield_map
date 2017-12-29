@@ -127,7 +127,7 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
    * @param \Drupal\geocoder\ProviderPluginManager $provider_plugin_manager
    *   The geocoders manager service.
    * @param \Drupal\geocoder\FormatterPluginManager $geocoder_formatter_plugin_manager
-   *   The geofield map formatter service.
+   *   The geocoder formatter plugin manager service.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
