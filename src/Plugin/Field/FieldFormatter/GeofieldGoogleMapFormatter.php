@@ -5,7 +5,6 @@ namespace Drupal\geofield_map\Plugin\Field\FieldFormatter;
 use Drupal\geofield_map\GeofieldMapFieldTrait;
 use Drupal\geofield_map\GeofieldMapFormElementsValidationTrait;
 use Drupal\Component\Utility\Html;
-use Drupal\Core\Url;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FormatterBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -128,6 +127,8 @@ class GeofieldGoogleMapFormatter extends FormatterBase implements ContainerFacto
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entity_field_manager
    *   The Entity Field Manager.
    * @param \Drupal\geofield\GeoPHP\GeoPHPInterface $geophp_wrapper
+   *   The The geoPhpWrapper.
+   * @param \Drupal\geofield_map\Services\GeocoderServiceInterface $geofield_map_geocoder
    *   The The geoPhpWrapper.
    */
   public function __construct(
