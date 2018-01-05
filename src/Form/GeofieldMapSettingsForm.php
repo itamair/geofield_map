@@ -275,9 +275,9 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     }
 
     // The form element that stores all plugins options.
-    $form['geocoder']['options'] = [
+    $form['geocoder']['plugins_options'] = [
       '#type' => 'value',
-      '#value' => !empty($config->get('geocoder.options')) ? $config->get('geocoder.options') : '',
+      '#value' => !empty($config->get('geocoder.plugins_options')) ? $config->get('geocoder.plugins_options') : '',
     ];
 
     // Set plugins and plugins_data variables.

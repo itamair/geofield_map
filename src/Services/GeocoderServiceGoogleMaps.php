@@ -14,11 +14,11 @@ class GeocoderServiceGoogleMaps extends GeocoderServiceAbstract {
    *
    * @param string $url
    *   The url to alter/integrate.
-   * @param array $plugin_options
+   * @param array $plugins_options
    *   The Plugins options.
    */
-  private function addUrlParameters(&$url, array $plugin_options) {
-    foreach ($plugin_options['googlemaps'] as $k => $option) {
+  private function addUrlParameters(&$url, array $plugins_options) {
+    foreach ($plugins_options['googlemaps'] as $k => $option) {
       if ($k != 'apiKey') {
         $url .= '&' . rawurlencode($k) . '=' . rawurlencode($option);
       }
@@ -74,17 +74,17 @@ class GeocoderServiceGoogleMaps extends GeocoderServiceAbstract {
   /**
    * {@inheritdoc}
    */
-  public function geocode($address, array $plugins, array $plugin_options = []) {
+  public function geocode($address, array $plugins, array $plugins_options = []) {
 
     // Use Http Secure as default, if not forcibly disabled.
     // Nowadays Google Geocoding Api will work only in https protocol.
-    $web_protocol = empty($plugin_options['googlemaps']['useSsl']) ? 'http:' : 'https:';
+    $web_protocol = empty($plugins_options['googlemaps']['useSsl']) ? 'http:' : 'https:';
 
     // Build the Google Maps Geocoding request, with the apiKey.
     $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?address=' . urlencode($address) . '&key=' . $this->gmapApiKey;
 
     // Add additional url options to the request (besides the apiKey already in)
-    $this->addUrlParameters($url, $plugin_options);
+    $this->addUrlParameters($url, $plugins_options);
 
     /* @var \GuzzleHttp\Client $client */
     $client = $this->httpClient;
@@ -94,19 +94,19 @@ class GeocoderServiceGoogleMaps extends GeocoderServiceAbstract {
   /**
    * {@inheritdoc}
    */
-  public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []) {
+  public function reverseGeocode($lat, $lng, array $plugins, array $plugins_options = []) {
 
     $lat_lng = $lat . ',' . $lng;
 
     // Use Http Secure as default, if not forcibly disabled.
     // Nowadays Google Geocoding Api will work only in https protocol.
-    $web_protocol = empty($plugin_options['googlemaps']['useSsl']) ? 'http:' : 'https:';
+    $web_protocol = empty($plugins_options['googlemaps']['useSsl']) ? 'http:' : 'https:';
 
     // Build the Google Maps Reverse Geocoding request, with the apiKey.
     $url = $web_protocol . '//maps.googleapis.com/maps/api/geocode/json?latlng=' . urlencode($lat_lng) . '&key=' . $this->gmapApiKey;
 
     // Add additional options to the request (besides the apiKey already in)
-    $this->addUrlParameters($url, $plugin_options);
+    $this->addUrlParameters($url, $plugins_options);
 
     /* @var \GuzzleHttp\Client $client */
     $client = $this->httpClient;

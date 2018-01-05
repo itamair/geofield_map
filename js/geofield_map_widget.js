@@ -175,7 +175,7 @@
 
     get_geocoder_plugins_options: function (mapid) {
       var self = this;
-      return self.map_data[mapid].geocoder.options ? self.map_data[mapid].geocoder.options : {'googlemaps' : {'apiKey': self.map_data[mapid].gmap_api_key}};
+      return self.map_data[mapid].geocoder.plugins_options ? self.map_data[mapid].geocoder.plugins_options : {'googlemaps' : {'apiKey': self.map_data[mapid].gmap_api_key}};
     },
 
     // The Geocoder call via Ajax.

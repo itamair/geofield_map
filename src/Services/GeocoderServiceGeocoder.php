@@ -151,14 +151,14 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
   /**
    * Manage Language Option for Google Maps Plugin.
    *
-   * @param array $plugin_options
+   * @param array $plugins_options
    *   Plugin options.
    */
-  private function manageGoogleMapsLanguageOption(array &$plugin_options) {
-    if (isset($plugin_options['googlemaps'])) {
-      foreach ($plugin_options['googlemaps'] as $k => $option) {
+  private function manageGoogleMapsLanguageOption(array &$plugins_options) {
+    if (isset($plugins_options['googlemaps'])) {
+      foreach ($plugins_options['googlemaps'] as $k => $option) {
         if ($k == 'language') {
-          $plugin_options['googlemaps']['locale'] = $option;
+          $plugins_options['googlemaps']['locale'] = $option;
         }
       }
     }
@@ -167,17 +167,17 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
   /**
    * {@inheritdoc}
    */
-  public function geocode($address, array $plugins, array $plugin_options = []) {
+  public function geocode($address, array $plugins, array $plugins_options = []) {
 
     // Eventually, the Google Maps Geocoding API "language" parameter needs to
     // be translated into "locale" in Geocoder Module API.
-    $this->manageGoogleMapsLanguageOption($plugin_options);
+    $this->manageGoogleMapsLanguageOption($plugins_options);
 
     $data = [
       'results' => [],
     ];
     /* @var array $addresses_collection */
-    $addresses_collection = $this->geocoder->geocode($address, $plugins, $plugin_options)->all();
+    $addresses_collection = $this->geocoder->geocode($address, $plugins, $plugins_options)->all();
     if (!empty($addresses_collection)) {
       /* @var \Geocoder\Model\Address $geo_address */
       foreach ($addresses_collection as $geo_address) {
@@ -203,18 +203,18 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
   /**
    * {@inheritdoc}
    */
-  public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []) {
+  public function reverseGeocode($lat, $lng, array $plugins, array $plugins_options = []) {
 
     // Eventually, the Google Maps Geocoding API "language" parameter needs to
     // be translated into "locale" in Geocoder Module API.
-    $this->manageGoogleMapsLanguageOption($plugin_options);
+    $this->manageGoogleMapsLanguageOption($plugins_options);
 
     $data = [
       'results' => [],
     ];
 
     /* @var \Geocoder\Model\AddressCollection $addresses_collection */
-    $addresses_collection = $this->geocoder->reverse($lat, $lng, $plugins, $plugin_options);
+    $addresses_collection = $this->geocoder->reverse($lat, $lng, $plugins, $plugins_options);
 
     if (!empty($addresses_collection)) {
       /* @var \Geocoder\Model\Address $geo_address */

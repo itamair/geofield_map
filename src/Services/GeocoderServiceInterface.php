@@ -14,14 +14,14 @@ interface GeocoderServiceInterface {
    *   The string to geocode.
    * @param string[] $plugins
    *   A list of Geocoders plugins identifiers to use.
-   * @param array $plugin_options
+   * @param array $plugins_options
    *   (optional) An associative array with plugin options, keyed plugin by the
    *   plugin id. Defaults to an empty array.
    *
    * @return array
    *   Return Results Array.
    */
-  public function geocode($address, array $plugins, array $plugin_options = []);
+  public function geocode($address, array $plugins, array $plugins_options = []);
 
   /**
    * Reverse Geocode with Google Maps or Geocoder Module functionalities.
@@ -32,14 +32,14 @@ interface GeocoderServiceInterface {
    *   The Longitude in decimal format string to reverse geocode.
    * @param string[] $plugins
    *   A list of Geocoders plugins identifiers to use.
-   * @param array $plugin_options
+   * @param array $plugins_options
    *   (optional) An associative array with plugin options, keyed plugin by the
    *   plugin id. Defaults to an empty array.
    *
    * @return array
    *   Return Results Array.
    */
-  public function reverseGeocode($lat, $lng, array $plugins, array $plugin_options = []);
+  public function reverseGeocode($lat, $lng, array $plugins, array $plugins_options = []);
 
   /**
    * Get the Selected Geofield Map Formatter.

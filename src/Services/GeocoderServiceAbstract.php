@@ -242,7 +242,7 @@ abstract class GeocoderServiceAbstract implements GeocoderServiceInterface {
         '#type' => 'html_tag',
         '#tag' => 'div',
         '#value' => $this->t('Options: @options', [
-          '@options' => $this->config->get('geofield_map.settings')->get('geocoder.options'),
+          '@options' => $this->config->get('geofield_map.settings')->get('geocoder.plugins_options'),
         ]),
       ],
       '#weight' => 0,

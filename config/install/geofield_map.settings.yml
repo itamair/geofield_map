@@ -6,7 +6,7 @@ geocoder:
   formatter: 'default_geocoder_address_formatter'
   plugins:
     - googlemaps
-  options: '{"googlemaps":{"apiKey":""}}'
+  plugins_options: '{"googlemaps":{"apiKey":""}}'
   plugins_checkboxes:
     googlemaps:
       options:
