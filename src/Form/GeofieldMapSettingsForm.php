@@ -132,7 +132,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       'attributes' => ['target' => 'blank'],
     ]));
 
-    $geocoder_php_library_link = $this->link->generate(t('Geocoder Php Library'), Url::fromUri('http://geocoder-php.org/Geocoder/#formatters', [
+    $geocoder_php_library_link = $this->link->generate(t('Geocoder Php Library'), Url::fromUri('http://geocoder-php.org/Geocoder/#address-based-providers', [
       'absolute' => TRUE,
       'attributes' => ['target' => 'blank'],
     ]));
@@ -267,7 +267,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
       $form['geocoder']['plugins_checkboxes'] = [
         '#type' => 'table',
         '#header' => [
-          t('Geocoder plugins'),
+          $this->t('Geocoder plugins'),
           $this->t('Options'),
         ],
         '#caption' => $geocoders_table_caption,
@@ -354,7 +354,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           '#type' => 'textfield',
           '#default_value' => $config->get('gmap_api_key'),
           '#title' => new FormattableMarkup($gmap_api_key_text . ' (@gmap_api_key_link)', [
-            '@gmap_api_key_link' => $this->link->generate(t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
+            '@gmap_api_key_link' => $this->link->generate($this->t('Get a Key/Authentication for Google Maps Javascript Library'), Url::fromUri('https://developers.google.com/maps/documentation/javascript/get-api-key', [
               'absolute' => TRUE,
               'attributes' => ['target' => 'blank'],
             ])),
@@ -415,7 +415,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
 
     // Get the Geofield Map Settings/Configurations.
     /* @var \Drupal\Core\Config\Config $geofield_map_settings */
-    $geofield_map_settings = $this->configFactory()->getEditable('geofield_map.settings');
+    $geofield_map_settings = $this->config('geofield_map.settings');
 
     // Get all the form state values, in an array structure.
     $form_state_values = $form_state->getValues();
