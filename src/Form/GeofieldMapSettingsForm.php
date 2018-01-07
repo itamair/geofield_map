@@ -445,7 +445,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
     }
 
     // Set the geocoder options value as combination of single plugin options.
-    $form_state_values['geocoder']['options'] = JSON::encode($form_state_values_geocoder_plugins_options);
+    $form_state_values['geocoder']['plugins_options'] = JSON::encode($form_state_values_geocoder_plugins_options);
 
     // If Geocoder module is active, set the (hidden) 'gmap_api_key' form
     // value from the 'googlemaps plugin gmap_api_key' value.
