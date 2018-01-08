@@ -344,7 +344,7 @@ class GeofieldMapSettingsForm extends ConfigFormBase {
           '#default_value' => $config->get('geocoder.plugins_checkboxes.googlemaps.options.use_ssl') ? TRUE : FALSE,
           '#title' => $this->t('Use Ssl'),
           '#description' => $this->t('This needs to be checked for the Google Maps Geocoder be able to work.'),
-          '#disabled' => TRUE,
+          //'#disabled' => TRUE,
         ];
 
         $gmap_api_key_text = empty($config->get('gmap_api_key')) ? '<span class="geofield-map-warning">Gmap Api Key</span>' : 'Gmap Api Key';

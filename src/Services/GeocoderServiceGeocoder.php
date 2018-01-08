@@ -348,7 +348,7 @@ class GeocoderServiceGeocoder extends GeocoderServiceAbstract implements Geocode
    */
   public function geocodeAddressElementCanWork() {
     $plugins = $this->config->get('geofield_map.settings')->get('geocoder.plugins');
-    return !empty($plugins) && !($plugins == ['googlemaps'] && empty($this->gmapApiKey));
+    return !empty($plugins);
   }
 
 }
