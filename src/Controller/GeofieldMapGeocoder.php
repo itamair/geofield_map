@@ -11,6 +11,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Drupal\Core\Cache\CacheableJsonResponse;
 use Drupal\Core\Cache\CacheableMetadata;
+use Drupal\Component\Serialization\Json;
 
 /**
  * Class GeofieldMapGeocoder.
@@ -86,7 +87,7 @@ class GeofieldMapGeocoder extends ControllerBase implements GeofieldMapGeocoderI
    */
   protected function getRequestData(Request $request) {
     $plugins = !empty($request->get('plugins')) ? explode('+', $request->get('plugins')) : [];
-    $options = !empty($request->getContent()) ? json_decode($request->getContent(), TRUE) : [];
+    $options = !empty($request->getContent()) ? Json::decode($request->getContent()) : [];
     return [$plugins, $options];
   }
 
