@@ -4,7 +4,6 @@ namespace Drupal\geofield_map\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\geofield\Element\GeofieldElementBase;
-use Drupal\Core\Url;
 use Drupal\Component\Utility\NestedArray;
 
 /**
